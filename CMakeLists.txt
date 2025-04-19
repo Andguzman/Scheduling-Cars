@@ -3,4 +3,5 @@ project(Scheduling_Cars C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(Scheduling_Cars main.c)
+add_executable(Scheduling_Cars main.c
+        Cars.c)
