@@ -1,0 +1,14 @@
+flow_method=FIFO
+road_length=10
+car_speed=2
+num_left=10
+num_right=10
+W=3
+signal_time=30
+max_wait_emergency=1
+normales_left=5
+deportivos_left=3
+emergencia_left=2
+normales_right=6
+deportivos_right=2
+emergencia_right=2
