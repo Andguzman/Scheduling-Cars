@@ -2,10 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "Scheduling_Cars.exe"
-		},
-		{
-			"path" : "Scheduling_Cars.pdb"
+			"path" : "Scheduling_Cars"
 		}
 	],
 	"backtrace" : 1,
@@ -69,16 +66,12 @@
 			{
 				"fragment" : "",
 				"role" : "flags"
-			},
-			{
-				"fragment" : "-lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32",
-				"role" : "libraries"
 			}
 		],
 		"language" : "C"
 	},
 	"name" : "Scheduling_Cars",
-	"nameOnDisk" : "Scheduling_Cars.exe",
+	"nameOnDisk" : "Scheduling_Cars",
 	"paths" : 
 	{
 		"build" : ".",
