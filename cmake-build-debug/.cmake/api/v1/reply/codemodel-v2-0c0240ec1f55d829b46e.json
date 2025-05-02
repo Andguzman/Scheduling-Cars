@@ -1,0 +1,60 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "RoadSim",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "Cars::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-Cars-Debug-3713b5d89ca9b4e56dc7.json",
+					"name" : "Cars",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug",
+		"source" : "/home/andres/Desktop/Operativos/Scheduling-Cars"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 7
+	}
+}

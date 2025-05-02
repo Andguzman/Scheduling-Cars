@@ -92,13 +92,6 @@ all: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug/CMakeFiles 0
 .PHONY : all
 
-# The main codegen target
-codegen: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug/CMakeFiles /home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug//CMakeFiles/progress.marks
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 codegen
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug/CMakeFiles 0
-.PHONY : codegen
-
 # The main clean target
 clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 clean
@@ -124,24 +117,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named Scheduling_Cars
+# Target rules for targets named Cars
 
 # Build rule for target.
-Scheduling_Cars: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Scheduling_Cars
-.PHONY : Scheduling_Cars
+Cars: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Cars
+.PHONY : Cars
 
 # fast build rule for target.
-Scheduling_Cars/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Scheduling_Cars.dir/build.make CMakeFiles/Scheduling_Cars.dir/build
-.PHONY : Scheduling_Cars/fast
+Cars/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Cars.dir/build.make CMakeFiles/Cars.dir/build
+.PHONY : Cars/fast
 
 Cars.o: Cars.c.o
 .PHONY : Cars.o
 
 # target to build an object file
 Cars.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Scheduling_Cars.dir/build.make CMakeFiles/Scheduling_Cars.dir/Cars.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Cars.dir/build.make CMakeFiles/Cars.dir/Cars.c.o
 .PHONY : Cars.c.o
 
 Cars.i: Cars.c.i
@@ -149,7 +142,7 @@ Cars.i: Cars.c.i
 
 # target to preprocess a source file
 Cars.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Scheduling_Cars.dir/build.make CMakeFiles/Scheduling_Cars.dir/Cars.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Cars.dir/build.make CMakeFiles/Cars.dir/Cars.c.i
 .PHONY : Cars.c.i
 
 Cars.s: Cars.c.s
@@ -157,32 +150,8 @@ Cars.s: Cars.c.s
 
 # target to generate assembly for a file
 Cars.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Scheduling_Cars.dir/build.make CMakeFiles/Scheduling_Cars.dir/Cars.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Cars.dir/build.make CMakeFiles/Cars.dir/Cars.c.s
 .PHONY : Cars.c.s
-
-main.o: main.c.o
-.PHONY : main.o
-
-# target to build an object file
-main.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Scheduling_Cars.dir/build.make CMakeFiles/Scheduling_Cars.dir/main.c.o
-.PHONY : main.c.o
-
-main.i: main.c.i
-.PHONY : main.i
-
-# target to preprocess a source file
-main.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Scheduling_Cars.dir/build.make CMakeFiles/Scheduling_Cars.dir/main.c.i
-.PHONY : main.c.i
-
-main.s: main.c.s
-.PHONY : main.s
-
-# target to generate assembly for a file
-main.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Scheduling_Cars.dir/build.make CMakeFiles/Scheduling_Cars.dir/main.c.s
-.PHONY : main.c.s
 
 # Help Target
 help:
@@ -190,16 +159,12 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
-	@echo "... codegen"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... Scheduling_Cars"
+	@echo "... Cars"
 	@echo "... Cars.o"
 	@echo "... Cars.i"
 	@echo "... Cars.s"
-	@echo "... main.o"
-	@echo "... main.i"
-	@echo "... main.s"
 .PHONY : help
 
 

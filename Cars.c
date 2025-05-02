@@ -1,9 +1,33 @@
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
+#include <cairo/cairo.h>
+#include <gtk/gtk.h>
+
+// Window dimensions
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
+
+// Road dimensions
+#define ROAD_WIDTH 100
+#define ROAD_X (WINDOW_WIDTH / 2 - ROAD_WIDTH / 2)
+#define ROAD_Y 50
+#define ROAD_HEIGHT (WINDOW_HEIGHT - 100)
+
+// Car dimensions
+#define CAR_WIDTH 60
+#define CAR_HEIGHT 40
+
+
+// Replace printf statements with visualization calls
+// In car_thread:
+// Replace:
+// printf("[Enter ] Car %d [%s] from %s side.\n", car->id, type_name(car->type), car->dir == LEFT ? "LEFT" : "RIGHT");
+// With:
+// add_visual_car(car->id, car->dir, car->type);
 
 // Simulación de cruce de una sola vía con modos FIFO, EQUITY y LETRERO (SIGNAL)
 // Parámetros leídos desde archivo "config.txt"
@@ -564,121 +588,333 @@ void* car_thread(void* arg) {
     return NULL;
 }
 
-void spawn_cars(Direction side, CarType type, int count, int* id) {
+void spawn_cars(Direction side, CarType type, int count, int *id) {
     for (int i = 0; i < count; ++i) {
-        Car* c = malloc(sizeof(Car));
+        Car *c = malloc(sizeof(Car));
         c->id = ++(*id);
         c->dir = side;
         c->type = type;
 
         pthread_t tid;
         pthread_create(&tid, NULL, car_thread, c);
-        pthread_detach(tid);  // Detach thread to auto-cleanup when done
+        pthread_detach(tid); // Detach thread to auto-cleanup when done
     }
 }
 
-int main() {
-    printf("Road Crossing Simulation \n");
+// Visualization data structure
+typedef struct VisualCar {
+    int id;
+    Direction dir;
+    CarType type;
+    double x;
+    double y;
+    struct VisualCar* next;
+} VisualCar;
 
-    // Initialize queues
-    init_queue(&left_queue);
-    init_queue(&right_queue);
+// Global visualization variables
+VisualCar* cars_on_screen = NULL;
+GtkWidget* drawing_area;
+GtkWidget* status_label;
+gboolean simulation_running = TRUE;
+pthread_mutex_t visual_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-    // Leer config
-    FILE* fp = fopen("config.txt", "r");
-    if (!fp) {
-        // Create a default config if file doesn't exist
-        fp = fopen("config.txt", "w");
-        if (!fp) {
-            perror("Failed to create config.txt");
-            return 1;
+// Function to create rgba color
+static void set_cairo_color(cairo_t* cr, double r, double g, double b, double a) {
+    cairo_set_source_rgba(cr, r/255.0, g/255.0, b/255.0, a/255.0);
+}
+
+// Add a car to the visual list
+void add_visual_car(int id, Direction dir, CarType type) {
+    pthread_mutex_lock(&visual_mutex);
+
+    VisualCar* car = (VisualCar*)malloc(sizeof(VisualCar));
+    car->id = id;
+    car->dir = dir;
+    car->type = type;
+
+    // Position based on direction
+    if (dir == LEFT) {
+        car->x = 0;
+        car->y = ROAD_Y + ROAD_HEIGHT / 4;
+    } else {
+        car->x = WINDOW_WIDTH - CAR_WIDTH;
+        car->y = ROAD_Y + ROAD_HEIGHT * 3 / 4;
+    }
+
+    car->next = cars_on_screen;
+    cars_on_screen = car;
+
+    pthread_mutex_unlock(&visual_mutex);
+}
+
+// Remove a car from the visual list
+void remove_visual_car(int id) {
+    pthread_mutex_lock(&visual_mutex);
+
+    VisualCar** pp = &cars_on_screen;
+    while (*pp) {
+        VisualCar* p = *pp;
+        if (p->id == id) {
+            *pp = p->next;
+            free(p);
+            pthread_mutex_unlock(&visual_mutex);
+            return;
+        }
+        pp = &p->next;
+    }
+
+    pthread_mutex_unlock(&visual_mutex);
+}
+
+// Update car positions on the road
+void update_visual_cars() {
+    pthread_mutex_lock(&visual_mutex);
+
+    VisualCar* car = cars_on_screen;
+    VisualCar* prev = NULL;
+
+    while (car != NULL) {
+        // Update position based on direction and speed
+        float speed = get_speed(car->type) / 10.0;  // Scale speed for visualization
+
+        if (car->dir == LEFT) {
+            car->x += speed;
+            if (car->x > WINDOW_WIDTH) {
+                // Car has reached the end of the road
+                if (prev == NULL) {
+                    cars_on_screen = car->next;
+                } else {
+                    prev->next = car->next;
+                }
+                VisualCar* temp = car;
+                car = car->next;
+                free(temp);
+                continue;
+            }
+        } else {
+            car->x -= speed;
+            if (car->x < -CAR_WIDTH) {
+                // Car has reached the end of the road
+                if (prev == NULL) {
+                    cars_on_screen = car->next;
+                } else {
+                    prev->next = car->next;
+                }
+                VisualCar* temp = car;
+                car = car->next;
+                free(temp);
+                continue;
+            }
         }
 
-        fprintf(fp, "flow_method=EQUITY\n");
-        fprintf(fp, "road_length=100\n");
-        fprintf(fp, "car_speed=10\n");
-        fprintf(fp, "num_left=5\n");
-        fprintf(fp, "num_right=5\n");
-        fprintf(fp, "W=3\n");
-        fprintf(fp, "signal_time=5\n");
-        fprintf(fp, "max_wait_emergency=3\n");
-        fprintf(fp, "normales_left=2\n");
-        fprintf(fp, "deportivos_left=2\n");
-        fprintf(fp, "emergencia_left=1\n");
-        fprintf(fp, "normales_right=2\n");
-        fprintf(fp, "deportivos_right=2\n");
-        fprintf(fp, "emergencia_right=1\n");
+        prev = car;
+        car = car->next;
+    }
 
-        fclose(fp);
-        fp = fopen("config.txt", "r");
-        if (!fp) {
-            perror("Failed to open config.txt");
-            return 1;
+    pthread_mutex_unlock(&visual_mutex);
+}
+
+// Draw car on cairo context
+void draw_car(cairo_t* cr, VisualCar* car) {
+    // Set color based on car type
+    if (car->type == NORMAL) {
+        set_cairo_color(cr, 0, 0, 255, 255);  // Blue
+    } else if (car->type == SPORT) {
+        set_cairo_color(cr, 255, 165, 0, 255);  // Orange
+    } else {  // EMERGENCY
+        set_cairo_color(cr, 255, 0, 0, 255);  // Red
+    }
+
+    // Draw car body
+    cairo_rectangle(cr, car->x, car->y, CAR_WIDTH, CAR_HEIGHT);
+    cairo_fill_preserve(cr);
+
+    // Draw car border
+    set_cairo_color(cr, 0, 0, 0, 255);  // Black
+    cairo_stroke(cr);
+
+    // Draw car ID
+    cairo_text_extents_t extents;
+    char id_str[10];
+    sprintf(id_str, "%d", car->id);
+
+    cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+    cairo_set_font_size(cr, 14);
+    cairo_text_extents(cr, id_str, &extents);
+
+    double text_x = car->x + (CAR_WIDTH - extents.width) / 2;
+    double text_y = car->y + (CAR_HEIGHT + extents.height) / 2;
+
+    set_cairo_color(cr, 255, 255, 255, 255);  // White text
+    cairo_move_to(cr, text_x, text_y);
+    cairo_show_text(cr, id_str);
+}
+
+// Draw queue
+void draw_queue(cairo_t* cr, CarQueue* queue, double queue_x, double queue_y) {
+    pthread_mutex_lock(&queue_mutex);
+
+    CarQueueNode* node = queue->head;
+    int i = 0;
+
+    while (node != NULL && i < 5) {  // Show at most 5 cars in queue
+        // Set color based on car type
+        if (node->car->type == NORMAL) {
+            set_cairo_color(cr, 0, 0, 255, 255);  // Blue
+        } else if (node->car->type == SPORT) {
+            set_cairo_color(cr, 255, 165, 0, 255);  // Orange
+        } else {  // EMERGENCY
+            set_cairo_color(cr, 255, 0, 0, 255);  // Red
         }
+
+        // Draw car body
+        cairo_rectangle(cr, queue_x, queue_y + i * 50, CAR_WIDTH, CAR_HEIGHT);
+        cairo_fill_preserve(cr);
+
+        // Draw car border
+        set_cairo_color(cr, 0, 0, 0, 255);  // Black
+        cairo_stroke(cr);
+
+        // Draw car ID
+        cairo_text_extents_t extents;
+        char id_str[10];
+        sprintf(id_str, "%d", node->car->id);
+
+        cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+        cairo_set_font_size(cr, 14);
+        cairo_text_extents(cr, id_str, &extents);
+
+        double text_x = queue_x + (CAR_WIDTH - extents.width) / 2;
+        double text_y = queue_y + i * 50 + (CAR_HEIGHT + extents.height) / 2;
+
+        set_cairo_color(cr, 255, 255, 255, 255);  // White text
+        cairo_move_to(cr, text_x, text_y);
+        cairo_show_text(cr, id_str);
+
+        node = node->next;
+        i++;
     }
 
-    char key[32], val[32];
-    while (fscanf(fp, "%31[^=]=%31s\n", key, val) == 2) {
-        if      (!strcmp(key, "flow_method"))      strcpy(flow_method, val);
-        else if (!strcmp(key, "road_length"))      road_length = atoi(val);
-        else if (!strcmp(key, "car_speed"))        base_speed = atoi(val);
-        else if (!strcmp(key, "num_left"))         num_left = atoi(val);
-        else if (!strcmp(key, "num_right"))        num_right = atoi(val);
-        else if (!strcmp(key, "W"))                W = atoi(val);
-        else if (!strcmp(key, "signal_time"))      signal_time = atoi(val);
-        else if (!strcmp(key, "max_wait_emergency")) max_wait_emergency = atoi(val);
-        else if (!strcmp(key, "normales_left"))    normales_left = atoi(val);
-        else if (!strcmp(key, "deportivos_left"))  deportivos_left = atoi(val);
-        else if (!strcmp(key, "emergencia_left"))  emergencia_left = atoi(val);
-        else if (!strcmp(key, "normales_right"))   normales_right = atoi(val);
-        else if (!strcmp(key, "deportivos_right")) deportivos_right = atoi(val);
-        else if (!strcmp(key, "emergencia_right")) emergencia_right = atoi(val);
-    }
-    fclose(fp);
+    pthread_mutex_unlock(&queue_mutex);
+}
 
-    printf("Configuration loaded:\n");
-    printf("- Flow method: %s\n", flow_method);
-    printf("- Road length: %d\n", road_length);
-    printf("- Base speed: %d\n", base_speed);
-    printf("- Max wait for emergency vehicles: %d seconds\n", max_wait_emergency);
+// Drawing function for the GTK drawing area
+gboolean on_draw(GtkWidget* widget, cairo_t* cr, gpointer data) {
+    // Set background color
+    set_cairo_color(cr, 220, 220, 220, 255);  // Light gray
+    cairo_paint(cr);
 
-    // Inicializar sincronización y estado
-    pthread_mutex_init(&road_mutex, NULL);
-    pthread_cond_init(&road_cond, NULL);
-    pthread_mutex_init(&queue_mutex, NULL);
+    // Draw road
+    set_cairo_color(cr, 80, 80, 80, 255);  // Dark gray
+    cairo_rectangle(cr, ROAD_X, ROAD_Y, ROAD_WIDTH, ROAD_HEIGHT);
+    cairo_fill(cr);
 
-    remaining_left  = normales_left + deportivos_left + emergencia_left;
-    remaining_right = normales_right + deportivos_right + emergencia_right;
-    cars_in_window  = 0;
-    current_dir     = LEFT;
-
-    // Lanzar hilo de señal si corresponde
-    pthread_t tidSignal;
-    if (!strcmp(flow_method, "SIGNAL")) {
-        pthread_create(&tidSignal, NULL, signal_thread, NULL);
-        pthread_detach(tidSignal);
+    // Draw road markers
+    set_cairo_color(cr, 255, 255, 255, 255);  // White
+    for (int y = ROAD_Y + 20; y < ROAD_Y + ROAD_HEIGHT; y += 40) {
+        cairo_rectangle(cr, ROAD_X + ROAD_WIDTH/2 - 2, y, 4, 20);
+        cairo_fill(cr);
     }
 
-    // Crear carros
-    int id = 0;
+    // Draw left queue
+    draw_queue(cr, &left_queue, 50, 100);
 
-    spawn_cars(LEFT, NORMAL, normales_left, &id);
-    spawn_cars(LEFT, SPORT, deportivos_left, &id);
-    spawn_cars(LEFT, EMERGENCY, emergencia_left, &id);
-    spawn_cars(RIGHT, NORMAL, normales_right, &id);
-    spawn_cars(RIGHT, SPORT, deportivos_right, &id);
-    spawn_cars(RIGHT, EMERGENCY, emergencia_right, &id);
+    // Draw right queue
+    draw_queue(cr, &right_queue, WINDOW_WIDTH - 50 - CAR_WIDTH, 100);
 
-    // Wait until all cars have crossed
-    while (remaining_left > 0 || remaining_right > 0) {
-        usleep(100000); // Sleep 100ms to avoid busy waiting
+    // Draw cars on the road
+    pthread_mutex_lock(&visual_mutex);
+    VisualCar* car = cars_on_screen;
+    while (car != NULL) {
+        draw_car(cr, car);
+        car = car->next;
     }
+    pthread_mutex_unlock(&visual_mutex);
 
-    // Cleanup
-    pthread_mutex_destroy(&road_mutex);
-    pthread_cond_destroy(&road_cond);
-    pthread_mutex_destroy(&queue_mutex);
+    // Draw labels for queues
+    set_cairo_color(cr, 0, 0, 0, 255);  // Black text
+    cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+    cairo_set_font_size(cr, 16);
 
-    printf("Simulation complete. All vehicles have crossed.\n");
+    cairo_move_to(cr, 50, 80);
+    cairo_show_text(cr, "Left Queue");
+
+    cairo_move_to(cr, WINDOW_WIDTH - 50 - 100, 80);
+    cairo_show_text(cr, "Right Queue");
+
+    return FALSE;
+}
+
+// Update the GUI (called from main thread)
+gboolean update_gui(gpointer data) {
+    // Update car positions
+    update_visual_cars();
+
+    // Request redraw
+    gtk_widget_queue_draw(drawing_area);
+
+    // Update status label
+    char status[100];
+    sprintf(status, "Method: %s | Direction: %s | Cars left: %d | Cars right: %d",
+            flow_method,
+            current_dir == LEFT ? "LEFT" : "RIGHT",
+            remaining_left, remaining_right);
+    gtk_label_set_text(GTK_LABEL(status_label), status);
+
+    // Continue timer if simulation is running
+    return simulation_running;
+}
+
+// Initialize GTK interface
+void init_gui(int* argc, char*** argv) {
+    gtk_init(argc, argv);
+
+    // Create main window
+    GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(window), "Traffic Simulation");
+    gtk_window_set_default_size(GTK_WINDOW(window), WINDOW_WIDTH, WINDOW_HEIGHT);
+    gtk_container_set_border_width(GTK_CONTAINER(window), 10);
+    g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+
+    // Create a vertical box
+    GtkWidget* vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+    gtk_container_add(GTK_CONTAINER(window), vbox);
+
+    // Create status label
+    status_label = gtk_label_new("Traffic Simulation Starting...");
+    gtk_box_pack_start(GTK_BOX(vbox), status_label, FALSE, FALSE, 0);
+
+    // Create drawing area
+    drawing_area = gtk_drawing_area_new();
+    gtk_widget_set_size_request(drawing_area, WINDOW_WIDTH, WINDOW_HEIGHT - 40);
+    g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(on_draw), NULL);
+    gtk_box_pack_start(GTK_BOX(vbox), drawing_area, TRUE, TRUE, 0);
+
+    // Show all widgets
+    gtk_widget_show_all(window);
+
+    // Start timer for regular updates (60 FPS)
+    g_timeout_add(16, update_gui, NULL);
+}
+
+// Main function (modified)
+int main(int argc, char* argv[]) {
+    // Initialize GTK
+    init_gui(&argc, &argv);
+
+    // Rest of your existing main function...
+
+    // Start GTK main loop in a separate thread
+    pthread_t gtk_thread;
+    pthread_create(&gtk_thread, NULL, (void*(*)(void*))gtk_main, NULL);
+
+    // ... existing simulation code ...
+
+    // When simulation completes
+    simulation_running = FALSE;
+
+    // Wait for GTK thread to finish
+    pthread_join(gtk_thread, NULL);
+
     return 0;
 }
