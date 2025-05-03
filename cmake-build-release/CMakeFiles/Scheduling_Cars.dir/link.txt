@@ -1,0 +1,1 @@
+/usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/Scheduling_Cars.dir/link.d CMakeFiles/Scheduling_Cars.dir/main.c.o CMakeFiles/Scheduling_Cars.dir/Cars.c.o CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o -o Scheduling_Cars

@@ -4,6 +4,7 @@ Scheduling_Cars: \
   /usr/lib/gcc/x86_64-linux-gnu/13/crtbeginS.o \
   CMakeFiles/Scheduling_Cars.dir/main.c.o \
   CMakeFiles/Scheduling_Cars.dir/Cars.c.o \
+  CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o \
   /usr/lib/gcc/x86_64-linux-gnu/13/libgcc.a \
   /usr/lib/gcc/x86_64-linux-gnu/13/libgcc_s.so \
   /usr/lib/gcc/x86_64-linux-gnu/13/libgcc_s.so \
@@ -35,6 +36,8 @@ Scheduling_Cars: \
 CMakeFiles/Scheduling_Cars.dir/main.c.o:
 
 CMakeFiles/Scheduling_Cars.dir/Cars.c.o:
+
+CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/libgcc.a:
 

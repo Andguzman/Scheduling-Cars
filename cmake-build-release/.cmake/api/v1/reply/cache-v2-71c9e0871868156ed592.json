@@ -43,7 +43,7 @@
 				}
 			],
 			"type" : "STRING",
-			"value" : "Debug"
+			"value" : "Release"
 		},
 		{
 			"name" : "CMAKE_CACHEFILE_DIR",
@@ -55,7 +55,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug"
+			"value" : "/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-release"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -415,7 +415,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug/CMakeFiles/pkgRedirects"
+			"value" : "/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-release/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -1027,7 +1027,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug"
+			"value" : "/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-release"
 		},
 		{
 			"name" : "Scheduling_Cars_IS_TOP_LEVEL",

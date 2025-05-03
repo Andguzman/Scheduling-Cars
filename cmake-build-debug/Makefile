@@ -136,6 +136,30 @@ Scheduling_Cars/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Scheduling_Cars.dir/build.make CMakeFiles/Scheduling_Cars.dir/build
 .PHONY : Scheduling_Cars/fast
 
+CEThreads.o: CEThreads.c.o
+.PHONY : CEThreads.o
+
+# target to build an object file
+CEThreads.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Scheduling_Cars.dir/build.make CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o
+.PHONY : CEThreads.c.o
+
+CEThreads.i: CEThreads.c.i
+.PHONY : CEThreads.i
+
+# target to preprocess a source file
+CEThreads.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Scheduling_Cars.dir/build.make CMakeFiles/Scheduling_Cars.dir/CEThreads.c.i
+.PHONY : CEThreads.c.i
+
+CEThreads.s: CEThreads.c.s
+.PHONY : CEThreads.s
+
+# target to generate assembly for a file
+CEThreads.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Scheduling_Cars.dir/build.make CMakeFiles/Scheduling_Cars.dir/CEThreads.c.s
+.PHONY : CEThreads.c.s
+
 Cars.o: Cars.c.o
 .PHONY : Cars.o
 
@@ -194,6 +218,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... Scheduling_Cars"
+	@echo "... CEThreads.o"
+	@echo "... CEThreads.i"
+	@echo "... CEThreads.s"
 	@echo "... Cars.o"
 	@echo "... Cars.i"
 	@echo "... Cars.s"
