@@ -1,5 +1,5 @@
 flow_method=EQUITY
-road_length=100
+road_length=50
 car_speed=10
 num_left=5
 num_right=5

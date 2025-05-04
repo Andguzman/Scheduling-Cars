@@ -11,8 +11,6 @@ CMakeFiles/main.dir/main.c.o: /home/andres/Desktop/Operativos/Scheduling-Cars/ma
   /usr/include/features-time64.h \
   /usr/include/features.h \
   /usr/include/linux/errno.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
   /usr/include/stdc-predef.h \
   /usr/include/stdio.h \
   /usr/include/stdlib.h \
@@ -25,7 +23,6 @@ CMakeFiles/main.dir/main.c.o: /home/andres/Desktop/Operativos/Scheduling-Cars/ma
   /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
   /usr/include/x86_64-linux-gnu/bits/byteswap.h \
   /usr/include/x86_64-linux-gnu/bits/confname.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
   /usr/include/x86_64-linux-gnu/bits/endian.h \
   /usr/include/x86_64-linux-gnu/bits/endianness.h \
   /usr/include/x86_64-linux-gnu/bits/environments.h \
@@ -38,13 +35,9 @@ CMakeFiles/main.dir/main.c.o: /home/andres/Desktop/Operativos/Scheduling-Cars/ma
   /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
   /usr/include/x86_64-linux-gnu/bits/long-double.h \
   /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
   /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
@@ -69,9 +62,7 @@ CMakeFiles/main.dir/main.c.o: /home/andres/Desktop/Operativos/Scheduling-Cars/ma
   /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/stack_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
@@ -118,25 +109,15 @@ libCEThreads.a:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/crtendS.o:
 
+/usr/lib/x86_64-linux-gnu/libgcc_s.so.1:
+
+/usr/lib/x86_64-linux-gnu/libc.so:
+
 /lib64/ld-linux-x86-64.so.2:
 
 /lib/x86_64-linux-gnu/libc.so.6:
 
 /usr/include/x86_64-linux-gnu/sys/ucontext.h:
-
-/usr/include/x86_64-linux-gnu/sys/types.h:
-
-/usr/include/x86_64-linux-gnu/sys/cdefs.h:
-
-/usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/stdarg.h:
-
-/usr/include/x86_64-linux-gnu/bits/wordsize.h:
-
-/usr/include/x86_64-linux-gnu/bits/waitstatus.h:
-
-/usr/include/x86_64-linux-gnu/bits/waitflags.h:
 
 /usr/include/x86_64-linux-gnu/bits/getopt_posix.h:
 
@@ -154,16 +135,6 @@ libCEThreads.a:
 
 /usr/include/x86_64-linux-gnu/bits/time64.h:
 
-/usr/lib/x86_64-linux-gnu/crtn.o:
-
-/usr/include/x86_64-linux-gnu/bits/unistd_ext.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_tm.h:
-
-/usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
-
-/usr/include/x86_64-linux-gnu/bits/setjmp.h:
-
 /usr/include/x86_64-linux-gnu/bits/types/locale_t.h:
 
 /usr/include/x86_64-linux-gnu/bits/getopt_core.h:
@@ -176,21 +147,7 @@ libCEThreads.a:
 
 /usr/include/features-time64.h:
 
-/usr/include/time.h:
-
 /usr/include/asm-generic/errno-base.h:
-
-/usr/include/x86_64-linux-gnu/bits/floatn-common.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
-
-/usr/include/x86_64-linux-gnu/sys/select.h:
-
-/usr/include/strings.h:
-
-/usr/include/x86_64-linux-gnu/bits/endianness.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdlib-float.h:
 
 /usr/include/x86_64-linux-gnu/bits/endian.h:
 
@@ -202,39 +159,37 @@ libCEThreads.a:
 
 /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h:
 
+/usr/include/errno.h:
+
 CMakeFiles/main.dir/main.c.o:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/crtbeginS.o:
 
 /usr/include/stdc-predef.h:
 
-/usr/lib/x86_64-linux-gnu/Scrt1.o:
-
-/home/andres/Desktop/Operativos/Scheduling-Cars/main.c:
-
-/usr/include/endian.h:
+/usr/include/x86_64-linux-gnu/sys/types.h:
 
 /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h:
 
-/usr/include/x86_64-linux-gnu/gnu/stubs.h:
+/usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h:
 
-/usr/include/x86_64-linux-gnu/bits/cpu-set.h:
+/usr/include/x86_64-linux-gnu/bits/posix_opt.h:
 
-/usr/include/features.h:
+/usr/include/x86_64-linux-gnu/bits/floatn-common.h:
 
-/usr/include/errno.h:
+/usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
 
-/usr/include/pthread.h:
+/usr/lib/x86_64-linux-gnu/Scrt1.o:
 
-/usr/include/sched.h:
+/usr/include/endian.h:
 
-/usr/include/stdlib.h:
+/home/andres/Desktop/Operativos/Scheduling-Cars/main.c:
 
-/usr/include/x86_64-linux-gnu/bits/types/time_t.h:
+/usr/include/x86_64-linux-gnu/bits/endianness.h:
 
-/usr/include/x86_64-linux-gnu/bits/types/timer_t.h:
+/usr/include/x86_64-linux-gnu/bits/stdlib-float.h:
 
 /usr/include/x86_64-linux-gnu/bits/indirect-return.h:
 
@@ -248,17 +203,7 @@ CMakeFiles/main.dir/main.c.o:
 
 /usr/include/string.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h:
-
-/usr/include/x86_64-linux-gnu/bits/posix_opt.h:
-
-/usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h:
-
-/usr/include/x86_64-linux-gnu/bits/sched.h:
-
-/usr/include/unistd.h:
-
-/usr/include/x86_64-linux-gnu/bits/struct_mutex.h:
+/usr/include/time.h:
 
 /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h:
 
@@ -266,15 +211,11 @@ CMakeFiles/main.dir/main.c.o:
 
 /usr/include/x86_64-linux-gnu/bits/stdint-intn.h:
 
-/usr/lib/x86_64-linux-gnu/libgcc_s.so.1:
+/usr/include/unistd.h:
 
-/usr/lib/x86_64-linux-gnu/libc.so:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h:
+/usr/include/x86_64-linux-gnu/bits/struct_mutex.h:
 
 /usr/include/alloca.h:
-
-/usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h:
 
 /usr/include/x86_64-linux-gnu/bits/time.h:
 
@@ -284,11 +225,21 @@ CMakeFiles/main.dir/main.c.o:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h:
 
+/usr/include/strings.h:
+
+/usr/include/x86_64-linux-gnu/sys/select.h:
+
 /usr/include/x86_64-linux-gnu/bits/types.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/FILE.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
+
+/usr/include/x86_64-linux-gnu/bits/waitstatus.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/stdarg.h:
+
+/usr/include/x86_64-linux-gnu/bits/wordsize.h:
 
 /usr/include/x86_64-linux-gnu/bits/confname.h:
 
@@ -310,8 +261,30 @@ CMakeFiles/main.dir/main.c.o:
 
 /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h:
 
-/usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h:
-
 /usr/include/x86_64-linux-gnu/bits/select.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h:
+
+/usr/include/stdlib.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/time_t.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/timer_t.h:
+
+/usr/lib/x86_64-linux-gnu/crtn.o:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_tm.h:
+
+/usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
+
+/usr/include/x86_64-linux-gnu/bits/unistd_ext.h:
+
+/usr/include/x86_64-linux-gnu/bits/waitflags.h:
+
+/usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
+
+/usr/include/features.h:
+
+/usr/include/x86_64-linux-gnu/gnu/stubs.h:
+
+/usr/include/x86_64-linux-gnu/sys/cdefs.h:

@@ -912,7 +912,7 @@ int main() {
         }
 
         fprintf(fp, "flow_method=EQUITY\n");
-        fprintf(fp, "road_length=100\n");
+        fprintf(fp, "road_length=50\n");
         fprintf(fp, "car_speed=10\n");
         fprintf(fp, "num_left=5\n");
         fprintf(fp, "num_right=5\n");
@@ -958,7 +958,7 @@ int main() {
 
     printf("Configuration loaded:\n");
     printf("- Flow method: %s\n", flow_method);
-    printf("- Road length: %d\n", road_length);
+    printf("- Road length: %d\n",  road_length);
     printf("- Base speed: %d\n", base_speed);
     printf("- Max wait for emergency vehicles: %d seconds\n", max_wait_emergency);
     printf("- Scheduler method: %s\n", scheduler_method);
