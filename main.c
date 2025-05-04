@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <time.h>
+#include <cairo/cairo.h>
+#include <gtk/gtk.h>
 #include "CEThreads.h"  // Replace pthread.h with CEThreads.h
 
 // Simulación de cruce de una sola vía con modos FIFO, EQUITY y LETRERO (SIGNAL)
@@ -891,8 +893,114 @@ void spawn_cars(Direction side, CarType type, int count, int* id) {
     }
 }
 
+// Drawing function for the GTK drawing area
+gboolean on_draw(GtkWidget* widget, cairo_t* cr, gpointer data) {
+    // Set background color
+    set_cairo_color(cr, 220, 220, 220, 255);  // Light gray
+    cairo_paint(cr);
+
+    // Draw road
+    set_cairo_color(cr, 80, 80, 80, 255);  // Dark gray
+    cairo_rectangle(cr, ROAD_X, ROAD_Y, ROAD_WIDTH, ROAD_HEIGHT);
+    cairo_fill(cr);
+
+    // Draw road markers
+    set_cairo_color(cr, 255, 255, 255, 255);  // White
+    for (int y = ROAD_Y + 20; y < ROAD_Y + ROAD_HEIGHT; y += 40) {
+        cairo_rectangle(cr, ROAD_X + ROAD_WIDTH/2 - 2, y, 4, 20);
+        cairo_fill(cr);
+    }
+
+    // Draw left queue
+    draw_queue(cr, &left_queue, 50, 100);
+
+    // Draw right queue
+    draw_queue(cr, &right_queue, WINDOW_WIDTH - 50 - CAR_WIDTH, 100);
+
+    // Draw cars on the road
+    pthread_mutex_lock(&visual_mutex);
+    VisualCar* car = cars_on_screen;
+    while (car != NULL) {
+        draw_car(cr, car);
+        car = car->next;
+    }
+    pthread_mutex_unlock(&visual_mutex);
+
+    // Draw labels for queues
+    set_cairo_color(cr, 0, 0, 0, 255);  // Black text
+    cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+    cairo_set_font_size(cr, 16);
+
+    cairo_move_to(cr, 50, 80);
+    cairo_show_text(cr, "Left Queue");
+
+    cairo_move_to(cr, WINDOW_WIDTH - 50 - 100, 80);
+    cairo_show_text(cr, "Right Queue");
+
+    return FALSE;
+}
+
+// Update the GUI (called from main thread)
+gboolean update_gui(gpointer data) {
+    // Update car positions
+    update_visual_cars();
+
+    // Request redraw
+    gtk_widget_queue_draw(drawing_area);
+
+    // Update status label
+    char status[100];
+    sprintf(status, "Method: %s | Direction: %s | Cars left: %d | Cars right: %d",
+            flow_method,
+            current_dir == LEFT ? "LEFT" : "RIGHT",
+            remaining_left, remaining_right);
+    gtk_label_set_text(GTK_LABEL(status_label), status);
+
+    // Continue timer if simulation is running
+    return simulation_running;
+}
+
+// Initialize GTK interface
+void init_gui(int* argc, char*** argv) {
+    gtk_init(argc, argv);
+
+    // Create main window
+    GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(window), "Traffic Simulation");
+    gtk_window_set_default_size(GTK_WINDOW(window), WINDOW_WIDTH, WINDOW_HEIGHT);
+    gtk_container_set_border_width(GTK_CONTAINER(window), 10);
+    g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+
+    // Create a vertical box
+    GtkWidget* vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+    gtk_container_add(GTK_CONTAINER(window), vbox);
+
+    // Create status label
+    status_label = gtk_label_new("Traffic Simulation Starting...");
+    gtk_box_pack_start(GTK_BOX(vbox), status_label, FALSE, FALSE, 0);
+
+    // Create drawing area
+    drawing_area = gtk_drawing_area_new();
+    gtk_widget_set_size_request(drawing_area, WINDOW_WIDTH, WINDOW_HEIGHT - 40);
+    g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(on_draw), NULL);
+    gtk_box_pack_start(GTK_BOX(vbox), drawing_area, TRUE, TRUE, 0);
+
+    // Show all widgets
+    gtk_widget_show_all(window);
+
+    // Start timer for regular updates (60 FPS)
+    g_timeout_add(16, update_gui, NULL);
+}
+
+
+
 int main() {
     printf("Road Crossing Simulation \n");
+
+
+    CEThread window;
+    CEthread_create(&gtk_thread, NULL, (void*(*)(void*))gtk_main, NULL);
+
 
     // Initialize the CEThreads library
     CEthread_lib_init();

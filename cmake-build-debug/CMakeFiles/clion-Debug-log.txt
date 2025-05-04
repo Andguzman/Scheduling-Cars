@@ -1,7 +1,4 @@
 /home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -G "Unix Makefiles" -S /home/andres/Desktop/Operativos/Scheduling-Cars -B /home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug
--- Performing Test CMAKE_HAVE_LIBC_PTHREAD
--- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
--- Found Threads: TRUE
--- Configuring done (0.1s)
+-- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug
