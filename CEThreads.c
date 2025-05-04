@@ -1,4 +1,3 @@
-
 #include "CEThreads.h"
 #include <string.h>
 #include <unistd.h>
@@ -6,6 +5,9 @@
 
 #define DEFAULT_STACK_SIZE (1024 * 1024) // 1MB stack
 #define MAX_THREADS 1000
+#ifndef SIGSTKSZ
+#define SIGSTKSZ (8*1024) // 8KB default stack size for signals if not defined
+#endif
 
 // Global variables for thread management
 static CEThread *thread_table[MAX_THREADS] = {NULL};
@@ -17,10 +19,11 @@ static int library_initialized = 0;
 static char scheduler_stack[SIGSTKSZ];
 
 // Forward declarations
-static void thread_wrapper(void);
+static void thread_wrapper(void *thread_ptr);
 static void add_to_ready_queue(CEThread *thread);
 static CEThread *get_next_from_ready_queue(void);
 static void remove_from_ready_queue(CEThread *thread);
+void CEthread_scheduler(void);
 
 // Initialize the thread library
 void CEthread_lib_init(void) {
@@ -37,6 +40,7 @@ void CEthread_lib_init(void) {
     main_thread->state = CE_THREAD_RUNNING;
     main_thread->next = NULL;
     main_thread->join_waiting = NULL;
+    main_thread->stack = NULL;  // Main thread uses system stack
 
     // Get current context for main thread
     if (getcontext(&main_thread->context) < 0) {
@@ -59,9 +63,6 @@ void CEthread_lib_init(void) {
     scheduler_context.uc_link = NULL;
 
     makecontext(&scheduler_context, (void (*)())CEthread_scheduler, 0);
-
-    // Setup timer for preemptive scheduling if needed
-    // This is optional and can be implemented later
 
     library_initialized = 1;
 }
@@ -141,6 +142,7 @@ int CEthread_create(CEthread_t *thread, const CEthread_attr_t *attr,
     new_thread->state = CE_THREAD_READY;
     new_thread->next = NULL;
     new_thread->join_waiting = NULL;
+    new_thread->retval = NULL;
 
     // Get current context as a starting point
     if (getcontext(&new_thread->context) < 0) {
@@ -163,8 +165,8 @@ int CEthread_create(CEthread_t *thread, const CEthread_attr_t *attr,
     new_thread->context.uc_stack.ss_size = stack_size;
     new_thread->context.uc_link = &scheduler_context;
 
-    // Set up the thread to run the wrapper function
-    makecontext(&new_thread->context, (void (*)())thread_wrapper, 0);
+    // Set up the thread to run the wrapper function with the thread as parameter
+    makecontext(&new_thread->context, (void (*)())thread_wrapper, 1, new_thread);
 
     // Store thread in thread table
     thread_table[new_id] = new_thread;
@@ -177,9 +179,15 @@ int CEthread_create(CEthread_t *thread, const CEthread_attr_t *attr,
 }
 
 // The wrapper function that all threads execute
-static void thread_wrapper(void) {
-    // Get current thread context
-    CEThread *thread = current_thread;
+static void thread_wrapper(void *thread_ptr) {
+    // Get thread from parameter instead of global
+    CEThread *thread = (CEThread*)thread_ptr;
+
+    // Double-check that we have the correct thread
+    if (!thread || thread != current_thread) {
+        fprintf(stderr, "Thread wrapper received incorrect thread pointer\n");
+        exit(EXIT_FAILURE);
+    }
 
     // Execute the thread function
     void *retval = thread->start_routine(thread->arg);
@@ -196,7 +204,11 @@ static void thread_wrapper(void) {
     }
 
     // Schedule next thread
-    CEthread_yield();
+    setcontext(&scheduler_context);
+
+    // We should never reach here
+    fprintf(stderr, "Thread wrapper: Failed to switch to scheduler\n");
+    exit(EXIT_FAILURE);
 }
 
 // Wait for a thread to terminate
@@ -317,9 +329,15 @@ void CEthread_scheduler(void) {
             }
 
             if (active_threads == 0) {
-                // No more active threads, exit
-                fprintf(stderr, "CEthread_scheduler: No more active threads\n");
-                exit(EXIT_SUCCESS);
+                // No more active threads, return to main thread if possible
+                if (thread_table[0]) {
+                    current_thread = thread_table[0];
+                    current_thread->state = CE_THREAD_RUNNING;
+                    setcontext(&current_thread->context);
+                } else {
+                    fprintf(stderr, "CEthread_scheduler: No more active threads\n");
+                    exit(EXIT_SUCCESS);
+                }
             }
 
             // Wait for a thread to become ready
@@ -335,7 +353,11 @@ void CEthread_scheduler(void) {
         if (prev_thread == NULL) {
             // First time scheduling
             setcontext(&current_thread->context);
+        } else if (prev_thread->state == CE_THREAD_TERMINATED) {
+            // Previous thread is terminated, no need to save its context
+            setcontext(&current_thread->context);
         } else {
+            // Switch contexts
             swapcontext(&scheduler_context, &current_thread->context);
         }
     }
@@ -410,12 +432,18 @@ int CEmutex_destroy(CEmutex_t *mutex) {
 
 int CEmutex_lock(CEmutex_t *mutex) {
     if (!mutex) return EINVAL;
+    if (!current_thread) return EINVAL;
 
     // Fast path: if mutex is unlocked, acquire it
     if (!mutex->locked) {
         mutex->locked = 1;
         mutex->owner = current_thread->id;
         return 0;
+    }
+
+    // Check for deadlock if we already own the mutex
+    if (mutex->owner == current_thread->id) {
+        return EDEADLK;
     }
 
     // Slow path: mutex is locked, wait for it
@@ -445,6 +473,7 @@ int CEmutex_lock(CEmutex_t *mutex) {
 
 int CEmutex_unlock(CEmutex_t *mutex) {
     if (!mutex) return EINVAL;
+    if (!current_thread) return EINVAL;
 
     // Check if mutex is locked
     if (!mutex->locked) {
@@ -494,6 +523,7 @@ int CEcond_destroy(CEcond_t *cond) {
 
 int CEcond_wait(CEcond_t *cond, CEmutex_t *mutex) {
     if (!cond || !mutex) return EINVAL;
+    if (!current_thread) return EINVAL;
 
     // Check if we own the mutex
     if (!mutex->locked || mutex->owner != current_thread->id) {

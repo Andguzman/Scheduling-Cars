@@ -1,8 +1,8 @@
+#include "CEThreads.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
 #include <time.h>
 
 // Simulación de cruce de una sola vía con modos FIFO, EQUITY y LETRERO (SIGNAL)
@@ -17,14 +17,14 @@ typedef struct {
     Direction dir;
     CarType type;
     struct timespec arrival_time;
-    int priority;           // For priority schedulerpth 
+    int priority;           // For priority scheduler
     int estimated_time;     // For SJF scheduler
     int deadline;           // For real-time scheduler
 } Car;
 
-pthread_mutex_t road_mutex;
-pthread_cond_t road_cond;
-pthread_mutex_t queue_mutex; // For managing the ready queue safely
+CEmutex_t road_mutex;
+CEcond_t road_cond;
+CEmutex_t queue_mutex; // For managing the ready queue safely
 
 // Car queue implementation for ordered priority queue
 typedef struct CarQueueNode {
@@ -38,7 +38,7 @@ typedef struct {
     CarQueueNode* head;
     CarQueueNode* tail;
     int size;                      // Track queue size
-    pthread_mutex_t mutex;         // Mutex for queue operations
+    CEmutex_t mutex;         // Mutex for queue operations
 } CarQueue;
 
 CarQueue left_queue;
@@ -88,10 +88,10 @@ int time_slice_remaining = 0;       // Time slice remaining for current car in R
 
 // Get next car from queue
 Car* dequeue_car(CarQueue* queue) {
-    pthread_mutex_lock(&queue_mutex);
+    CEmutex_lock(&queue_mutex);
 
     if (queue->head == NULL) {
-        pthread_mutex_unlock(&queue_mutex);
+        CEmutex_unlock(&queue_mutex);
         return NULL;
     }
 
@@ -117,14 +117,14 @@ Car* dequeue_car(CarQueue* queue) {
     // Free node
     free(node);
 
-    pthread_mutex_unlock(&queue_mutex);
+    CEmutex_unlock(&queue_mutex);
     return car;
 }
 
 // Check if there are any emergency vehicles in the queue
 // whose wait time is approaching the deadline
 int check_emergency_deadlines(CarQueue* queue) {
-    pthread_mutex_lock(&queue_mutex);
+    CEmutex_lock(&queue_mutex);
 
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
@@ -132,7 +132,7 @@ int check_emergency_deadlines(CarQueue* queue) {
     // No emergency vehicles waiting
     if ((queue == &left_queue && emergency_vehicles_waiting_left == 0) ||
         (queue == &right_queue && emergency_vehicles_waiting_right == 0)) {
-        pthread_mutex_unlock(&queue_mutex);
+        CEmutex_unlock(&queue_mutex);
         return 0;
     }
 
@@ -144,14 +144,14 @@ int check_emergency_deadlines(CarQueue* queue) {
 
             // If emergency vehicle is approaching deadline (80% of max wait)
             if (wait_time >= (max_wait_emergency * 0.8)) {
-                pthread_mutex_unlock(&queue_mutex);
+                CEmutex_unlock(&queue_mutex);
                 return 1;
             }
         }
         node = node->next;
     }
 
-    pthread_mutex_unlock(&queue_mutex);
+    CEmutex_unlock(&queue_mutex);
     return 0;
 }
 
@@ -159,7 +159,7 @@ int check_emergency_deadlines(CarQueue* queue) {
 void* signal_thread(void* arg) {
     while (1) {
         sleep(signal_time);
-        pthread_mutex_lock(&road_mutex);
+        CEmutex_lock(&road_mutex);
         // Only change direction if there are no emergency vehicles approaching deadline
         // in the current direction
         if ((current_dir == LEFT && !check_emergency_deadlines(&left_queue)) ||
@@ -168,12 +168,12 @@ void* signal_thread(void* arg) {
             cars_in_window = 0;
             printf("[Signal] Cambio de sentido: %s\n",
                 current_dir == LEFT ? "LEFT" : "RIGHT");
-            pthread_cond_broadcast(&road_cond);
+            CEcond_broadcast(&road_cond);
         } else {
             printf("[Signal] Maintaining direction due to emergency vehicle priority: %s\n",
                 current_dir == LEFT ? "LEFT" : "RIGHT");
         }
-        pthread_mutex_unlock(&road_mutex);
+        CEmutex_unlock(&road_mutex);
     }
     return NULL;
 }
@@ -227,8 +227,6 @@ int can_enter_road(Car* car) {
     return 0;
 }
 
-
-
 // Function to select scheduler type from string
 SchedulerType get_scheduler_type(const char* method) {
     if (strcmp(method, "RR") == 0) return RR;
@@ -243,7 +241,7 @@ void requeue_car(CarQueue* queue, Car* car) {
     // Only used for RR scheduler
     if (current_scheduler != RR) return;
 
-    pthread_mutex_lock(&queue_mutex);
+    CEmutex_lock(&queue_mutex);
 
     // Create new node
     CarQueueNode* new_node = (CarQueueNode*)malloc(sizeof(CarQueueNode));
@@ -262,10 +260,10 @@ void requeue_car(CarQueue* queue, Car* car) {
     }
 
     queue->size++;
-    pthread_mutex_unlock(&queue_mutex);
+    CEmutex_unlock(&queue_mutex);
 
     // Signal waiting threads
-    pthread_cond_broadcast(&road_cond);
+    CEcond_broadcast(&road_cond);
 }
 
 // Read scheduler configuration from file
@@ -316,12 +314,12 @@ void init_queue(CarQueue* queue) {
     queue->head = NULL;
     queue->tail = NULL;
     queue->size = 0;
-    pthread_mutex_init(&queue->mutex, NULL);
+    CEmutex_init(&queue->mutex, NULL);
 }
 
 // Queue management functions with scheduler support
 void enqueue_car(CarQueue* queue, Car* car) {
-    pthread_mutex_lock(&queue_mutex);
+    CEmutex_lock(&queue_mutex);
 
     // Create new node
     CarQueueNode* new_node = (CarQueueNode*)malloc(sizeof(CarQueueNode));
@@ -349,7 +347,7 @@ void enqueue_car(CarQueue* queue, Car* car) {
         queue->head = new_node;
         queue->tail = new_node;
         queue->size++;
-        pthread_mutex_unlock(&queue_mutex);
+        CEmutex_unlock(&queue_mutex);
         return;
     }
 
@@ -487,10 +485,8 @@ void enqueue_car(CarQueue* queue, Car* car) {
     }
 
     queue->size++;
-    pthread_mutex_unlock(&queue_mutex);
+    CEmutex_unlock(&queue_mutex);
 }
-
-
 
 void* car_thread(void* arg) {
     Car* car = (Car*)arg;
@@ -538,7 +534,7 @@ void* car_thread(void* arg) {
         enqueue_car(&right_queue, car);
     }
 
-    pthread_mutex_lock(&road_mutex);
+    CEmutex_lock(&road_mutex);
 
     // Special handling for Round Robin
     if (current_scheduler == RR && car->type != EMERGENCY) {
@@ -546,11 +542,11 @@ void* car_thread(void* arg) {
         // But this doesn't apply to emergency vehicles - they still get priority
         while (1) {
             // Check if car is at front of its queue
-            pthread_mutex_lock(&queue_mutex);
+            CEmutex_lock(&queue_mutex);
             int is_front = (car->dir == LEFT) ?
                 (left_queue.head && left_queue.head->car->id == car->id) :
                 (right_queue.head && right_queue.head->car->id == car->id);
-            pthread_mutex_unlock(&queue_mutex);
+            CEmutex_unlock(&queue_mutex);
 
             // CRITICAL CHANGE: This is where we check if the car can enter the road
             // We must ensure no cars from opposite direction are on the road
@@ -575,7 +571,7 @@ void* car_thread(void* arg) {
                                    check_emergency_deadlines(&right_queue);
 
             if (emergency_pending) {
-                pthread_cond_wait(&road_cond, &road_mutex);
+                CEcond_wait(&road_cond, &road_mutex);
                 continue;
             }
 
@@ -584,7 +580,7 @@ void* car_thread(void* arg) {
                 .tv_sec = 0,
                 .tv_nsec = 100000000 // 100ms
             };
-            pthread_cond_timedwait(&road_cond, &road_mutex, &wait_time);
+            CEcond_timedwait(&road_cond, &road_mutex, &wait_time);
         }
     }
     // Emergency vehicle handling with strict deadline enforcement
@@ -633,7 +629,7 @@ void* car_thread(void* arg) {
                 .tv_sec = 0,
                 .tv_nsec = 100000000 // 100ms
             };
-            pthread_cond_timedwait(&road_cond, &road_mutex, &wait_time);
+            CEcond_timedwait(&road_cond, &road_mutex, &wait_time);
         }
     }
     // For priority-based schedulers (Priority, SJF, REALTIME) and FCFS
@@ -642,11 +638,11 @@ void* car_thread(void* arg) {
         if (strcmp(flow_method, "FIFO") == 0) {
             // FIFO: Wait until car is at front of its queue AND can enter road
             while (1) {
-                pthread_mutex_lock(&queue_mutex);
+                CEmutex_lock(&queue_mutex);
                 int is_front = (car->dir == LEFT) ?
                     (left_queue.head && left_queue.head->car->id == car->id) :
                     (right_queue.head && right_queue.head->car->id == car->id);
-                pthread_mutex_unlock(&queue_mutex);
+                CEmutex_unlock(&queue_mutex);
 
                 // CRITICAL CHANGE: Enforce can_enter_road check
                 if (is_front && can_enter_road(car)) {
@@ -671,7 +667,7 @@ void* car_thread(void* arg) {
 
                 // If there's an emergency vehicle approaching deadline, yield and wait
                 if (emergency_pending) {
-                    pthread_cond_wait(&road_cond, &road_mutex);
+                    CEcond_wait(&road_cond, &road_mutex);
                     continue;
                 }
 
@@ -680,17 +676,17 @@ void* car_thread(void* arg) {
                     .tv_sec = 0,
                     .tv_nsec = 100000000 // 100ms
                 };
-                pthread_cond_timedwait(&road_cond, &road_mutex, &wait_time);
+                CEcond_timedwait(&road_cond, &road_mutex, &wait_time);
             }
         }
         else if (strcmp(flow_method, "EQUITY") == 0) {
             // EQUITY: Wait until car's direction is allowed and it's within the window
             while (1) {
-                pthread_mutex_lock(&queue_mutex);
+                CEmutex_lock(&queue_mutex);
                 int is_front = (car->dir == LEFT) ?
                     (left_queue.head && left_queue.head->car->id == car->id) :
                     (right_queue.head && right_queue.head->car->id == car->id);
-                pthread_mutex_unlock(&queue_mutex);
+                CEmutex_unlock(&queue_mutex);
 
                 int can_go = (car->dir == current_dir && cars_in_window < W && is_front) ||
                             (current_dir == LEFT && remaining_left == 0 && car->dir == RIGHT && is_front) ||
@@ -719,7 +715,7 @@ void* car_thread(void* arg) {
 
                 // If there's an emergency vehicle approaching deadline, yield and wait
                 if (emergency_pending) {
-                    pthread_cond_wait(&road_cond, &road_mutex);
+                    CEcond_wait(&road_cond, &road_mutex);
                     continue;
                 }
 
@@ -728,17 +724,17 @@ void* car_thread(void* arg) {
                     .tv_sec = 0,
                     .tv_nsec = 100000000 // 100ms
                 };
-                pthread_cond_timedwait(&road_cond, &road_mutex, &wait_time);
+                CEcond_timedwait(&road_cond, &road_mutex, &wait_time);
             }
         }
         else if (strcmp(flow_method, "SIGNAL") == 0) {
             // SIGNAL: Wait until car's direction is allowed
             while (1) {
-                pthread_mutex_lock(&queue_mutex);
+                CEmutex_lock(&queue_mutex);
                 int is_front = (car->dir == LEFT) ?
                     (left_queue.head && left_queue.head->car->id == car->id) :
                     (right_queue.head && right_queue.head->car->id == car->id);
-                pthread_mutex_unlock(&queue_mutex);
+                CEmutex_unlock(&queue_mutex);
 
                 // CRITICAL CHANGE: Add can_enter_road check
                 if (car->dir == current_dir && is_front && can_enter_road(car)) {
@@ -763,7 +759,7 @@ void* car_thread(void* arg) {
 
                 // If there's an emergency vehicle approaching deadline, yield and wait
                 if (emergency_pending) {
-                    pthread_cond_wait(&road_cond, &road_mutex);
+                    CEcond_wait(&road_cond, &road_mutex);
                     continue;
                 }
 
@@ -772,7 +768,7 @@ void* car_thread(void* arg) {
                     .tv_sec = 0,
                     .tv_nsec = 100000000 // 100ms
                 };
-                pthread_cond_timedwait(&road_cond, &road_mutex, &wait_time);
+                CEcond_timedwait(&road_cond, &road_mutex, &wait_time);
             }
         }
     }
@@ -799,7 +795,7 @@ void* car_thread(void* arg) {
     }
 
     // Release mutex while crossing to allow other cars to queue up
-    pthread_mutex_unlock(&road_mutex);
+    CEmutex_unlock(&road_mutex);
 
     // For Round Robin, check if time slice expires during travel
     if (current_scheduler == RR && car->type != EMERGENCY) {
@@ -824,7 +820,7 @@ void* car_thread(void* arg) {
     }
 
     // Update state after crossing
-    pthread_mutex_lock(&road_mutex);
+    CEmutex_lock(&road_mutex);
 
     // Update road occupation
     cars_on_road--;
@@ -871,8 +867,8 @@ void* car_thread(void* arg) {
     }
 
     // Notify waiting cars
-    pthread_cond_broadcast(&road_cond);
-    pthread_mutex_unlock(&road_mutex);
+    CEcond_broadcast(&road_cond);
+    CEmutex_unlock(&road_mutex);
 
     // Free car structure - only if not requeued
     if (!(current_scheduler == RR && car->type != EMERGENCY && rr_timeout)) {
@@ -889,17 +885,25 @@ void spawn_cars(Direction side, CarType type, int count, int* id) {
         c->dir = side;
         c->type = type;
 
-        pthread_t tid;
-        pthread_create(&tid, NULL, car_thread, c);
-        pthread_detach(tid);  // Detach thread to auto-cleanup when done
+        CEthread_t tid;
+        CEthread_create(&tid, NULL, car_thread, c);
     }
 }
+
 int main() {
     printf("Road Crossing Simulation \n");
+
+    // Initialize CEThreads library
+    CEthread_lib_init();
 
     // Initialize queues
     init_queue(&left_queue);
     init_queue(&right_queue);
+
+    // Initialize synchronization
+    CEmutex_init(&road_mutex, NULL);
+    CEcond_init(&road_cond, NULL);
+    CEmutex_init(&queue_mutex, NULL);
 
     // Leer config
     FILE* fp = fopen("config.txt", "r");
@@ -962,21 +966,15 @@ int main() {
     printf("- Max wait for emergency vehicles: %d seconds\n", max_wait_emergency);
     printf("- Scheduler method: %s\n", scheduler_method);
 
-    // Inicializar sincronización y estado
-    pthread_mutex_init(&road_mutex, NULL);
-    pthread_cond_init(&road_cond, NULL);
-    pthread_mutex_init(&queue_mutex, NULL);
-
     remaining_left  = normales_left + deportivos_left + emergencia_left;
     remaining_right = normales_right + deportivos_right + emergencia_right;
     cars_in_window  = 0;
     current_dir     = LEFT;
 
     // Lanzar hilo de señal si corresponde
-    pthread_t tidSignal;
+    CEthread_t tidSignal;
     if (!strcmp(flow_method, "SIGNAL")) {
-        pthread_create(&tidSignal, NULL, signal_thread, NULL);
-        pthread_detach(tidSignal);
+        CEthread_create(&tidSignal, NULL, signal_thread, NULL);
     }
 
     // Crear carros
@@ -995,9 +993,12 @@ int main() {
     }
 
     // Cleanup
-    pthread_mutex_destroy(&road_mutex);
-    pthread_cond_destroy(&road_cond);
-    pthread_mutex_destroy(&queue_mutex);
+    CEmutex_destroy(&road_mutex);
+    CEcond_destroy(&road_cond);
+    CEmutex_destroy(&queue_mutex);
+
+    // Destroy CEThreads library
+    CEthread_lib_destroy();
 
     printf("Simulation complete. All vehicles have crossed.\n");
     return 0;

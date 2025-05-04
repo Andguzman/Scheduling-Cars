@@ -1,20 +1,14 @@
 [
 {
   "directory": "/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug",
-  "command": "/usr/bin/cc   -g -std=gnu11 -fdiagnostics-color=always -o CMakeFiles/Scheduling_Cars.dir/main.c.o -c /home/andres/Desktop/Operativos/Scheduling-Cars/main.c",
-  "file": "/home/andres/Desktop/Operativos/Scheduling-Cars/main.c",
-  "output": "CMakeFiles/Scheduling_Cars.dir/main.c.o"
-},
-{
-  "directory": "/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug",
-  "command": "/usr/bin/cc   -g -std=gnu11 -fdiagnostics-color=always -o CMakeFiles/Scheduling_Cars.dir/Cars.c.o -c /home/andres/Desktop/Operativos/Scheduling-Cars/Cars.c",
-  "file": "/home/andres/Desktop/Operativos/Scheduling-Cars/Cars.c",
-  "output": "CMakeFiles/Scheduling_Cars.dir/Cars.c.o"
-},
-{
-  "directory": "/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug",
-  "command": "/usr/bin/cc   -g -std=gnu11 -fdiagnostics-color=always -o CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o -c /home/andres/Desktop/Operativos/Scheduling-Cars/CEThreads.c",
+  "command": "/usr/bin/cc  -I/home/andres/Desktop/Operativos/Scheduling-Cars  -Wall -g -g -std=gnu11 -fdiagnostics-color=always -o CMakeFiles/CEThreads.dir/CEThreads.c.o -c /home/andres/Desktop/Operativos/Scheduling-Cars/CEThreads.c",
   "file": "/home/andres/Desktop/Operativos/Scheduling-Cars/CEThreads.c",
-  "output": "CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o"
+  "output": "CMakeFiles/CEThreads.dir/CEThreads.c.o"
+},
+{
+  "directory": "/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug",
+  "command": "/usr/bin/cc  -I/home/andres/Desktop/Operativos/Scheduling-Cars  -Wall -g -g -std=gnu11 -fdiagnostics-color=always -o CMakeFiles/main.dir/main.c.o -c /home/andres/Desktop/Operativos/Scheduling-Cars/main.c",
+  "file": "/home/andres/Desktop/Operativos/Scheduling-Cars/main.c",
+  "output": "CMakeFiles/main.dir/main.c.o"
 }
 ]

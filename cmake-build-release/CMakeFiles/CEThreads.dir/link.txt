@@ -1,0 +1,2 @@
+/usr/bin/ar qc libCEThreads.a CMakeFiles/CEThreads.dir/CEThreads.c.o
+/usr/bin/ranlib libCEThreads.a
