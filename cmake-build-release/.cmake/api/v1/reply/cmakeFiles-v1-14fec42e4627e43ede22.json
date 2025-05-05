@@ -6,7 +6,7 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : "cmake-build-debug/CMakeFiles/3.31.6/CMakeSystem.cmake"
+			"path" : "cmake-build-release/CMakeFiles/3.31.6/CMakeSystem.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -20,7 +20,7 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : "cmake-build-debug/CMakeFiles/3.31.6/CMakeCCompiler.cmake"
+			"path" : "cmake-build-release/CMakeFiles/3.31.6/CMakeCCompiler.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -125,7 +125,27 @@
 		{
 			"isCMake" : true,
 			"isExternal" : true,
-			"path" : "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/FindPkgConfig.cmake"
+			"path" : "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/FindThreads.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/CheckLibraryExists.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/CheckIncludeFile.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/CheckCSourceCompiles.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/Internal/CheckSourceCompiles.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -141,7 +161,7 @@
 	"kind" : "cmakeFiles",
 	"paths" : 
 	{
-		"build" : "/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug",
+		"build" : "/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-release",
 		"source" : "/home/andres/Desktop/Operativos/Scheduling-Cars"
 	},
 	"version" : 

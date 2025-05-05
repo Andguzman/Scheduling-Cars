@@ -1,52 +1,54 @@
 cmake_minimum_required(VERSION 3.10)
-project(Scheduling_Cars C)
+project(CEThreads_Project C)
 
+# Set C standard
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 
-# Find the required packages
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
-pkg_check_modules(CAIRO REQUIRED cairo)
+# Set compiler flags
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -g")
 
-# Include directories
-include_directories(
-        ${GTK3_INCLUDE_DIRS}
-        ${CAIRO_INCLUDE_DIRS}
-        ${CMAKE_CURRENT_SOURCE_DIR}  # For including CEThreads.h
-)
-
-# Add link directories
-link_directories(
-        ${GTK3_LIBRARY_DIRS}
-        ${CAIRO_LIBRARY_DIRS}
-)
-
-# Add compile options
-add_compile_options(
-        ${GTK3_CFLAGS_OTHER}
-        ${CAIRO_CFLAGS_OTHER}
-)
-
-# Define your source files
-set(SOURCE_FILES
-        main.c
-        # Add your other source files here
-        # For example:
+# Source files for the CEThreads library
+set(CETHREADS_SOURCES
         CEThreads.c
 )
 
-# Create executable
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
-
-# Link libraries
-target_link_libraries(${PROJECT_NAME}
-        ${GTK3_LIBRARIES}
-        ${CAIRO_LIBRARIES}
-        # Add any other libraries you need
-        m  # Math library (if needed)
+# Source files for the main application
+set(MAIN_SOURCES
+        main.c
 )
 
-# If you have any custom CEThreads library that needs compilation
-# Uncomment and modify these lines:
-# add_library(CEThreads CEThreads.c)
-# target_link_libraries(${PROJECT_NAME} CEThreads)
+# Create the CEThreads library
+add_library(CEThreads STATIC ${CETHREADS_SOURCES})
+
+# Specify include directories
+target_include_directories(CEThreads PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Create the main executable
+add_executable(main ${MAIN_SOURCES})
+
+# Link the main executable with the CEThreads library
+target_link_libraries(main PRIVATE CEThreads)
+
+# Check for pthread and link if found
+find_package(Threads)
+if(CMAKE_THREAD_LIBS_INIT)
+    target_link_libraries(CEThreads PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+endif()
+
+# Add custom target for easy testing
+add_custom_target(run
+        COMMAND main
+        DEPENDS main
+        WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
+)
+
+# Optional: Install targets
+install(TARGETS CEThreads
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+)
+
+install(FILES CEThreads.h
+        DESTINATION include
+)

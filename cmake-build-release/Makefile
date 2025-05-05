@@ -85,6 +85,51 @@ rebuild_cache:
 rebuild_cache/fast: rebuild_cache
 .PHONY : rebuild_cache/fast
 
+# Special rule for the target list_install_components
+list_install_components:
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Available install components are: \"Unspecified\""
+.PHONY : list_install_components
+
+# Special rule for the target list_install_components
+list_install_components/fast: list_install_components
+.PHONY : list_install_components/fast
+
+# Special rule for the target install
+install: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
+	/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/bin/cmake -P cmake_install.cmake
+.PHONY : install
+
+# Special rule for the target install
+install/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
+	/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/bin/cmake -P cmake_install.cmake
+.PHONY : install/fast
+
+# Special rule for the target install/local
+install/local: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
+	/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local
+
+# Special rule for the target install/local
+install/local/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
+	/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local/fast
+
+# Special rule for the target install/strip
+install/strip: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
+	/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip
+
+# Special rule for the target install/strip
+install/strip/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
+	/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip/fast
+
 # The main all target
 all: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-release/CMakeFiles /home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-release//CMakeFiles/progress.marks
@@ -117,24 +162,50 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named Scheduling_Cars
+# Target rules for targets named CEThreads
 
 # Build rule for target.
-Scheduling_Cars: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Scheduling_Cars
-.PHONY : Scheduling_Cars
+CEThreads: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CEThreads
+.PHONY : CEThreads
 
 # fast build rule for target.
-Scheduling_Cars/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Scheduling_Cars.dir/build.make CMakeFiles/Scheduling_Cars.dir/build
-.PHONY : Scheduling_Cars/fast
+CEThreads/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CEThreads.dir/build.make CMakeFiles/CEThreads.dir/build
+.PHONY : CEThreads/fast
+
+#=============================================================================
+# Target rules for targets named main
+
+# Build rule for target.
+main: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 main
+.PHONY : main
+
+# fast build rule for target.
+main/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/build
+.PHONY : main/fast
+
+#=============================================================================
+# Target rules for targets named run
+
+# Build rule for target.
+run: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 run
+.PHONY : run
+
+# fast build rule for target.
+run/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/run.dir/build.make CMakeFiles/run.dir/build
+.PHONY : run/fast
 
 CEThreads.o: CEThreads.c.o
 .PHONY : CEThreads.o
 
 # target to build an object file
 CEThreads.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Scheduling_Cars.dir/build.make CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CEThreads.dir/build.make CMakeFiles/CEThreads.dir/CEThreads.c.o
 .PHONY : CEThreads.c.o
 
 CEThreads.i: CEThreads.c.i
@@ -142,7 +213,7 @@ CEThreads.i: CEThreads.c.i
 
 # target to preprocess a source file
 CEThreads.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Scheduling_Cars.dir/build.make CMakeFiles/Scheduling_Cars.dir/CEThreads.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CEThreads.dir/build.make CMakeFiles/CEThreads.dir/CEThreads.c.i
 .PHONY : CEThreads.c.i
 
 CEThreads.s: CEThreads.c.s
@@ -150,7 +221,7 @@ CEThreads.s: CEThreads.c.s
 
 # target to generate assembly for a file
 CEThreads.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Scheduling_Cars.dir/build.make CMakeFiles/Scheduling_Cars.dir/CEThreads.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CEThreads.dir/build.make CMakeFiles/CEThreads.dir/CEThreads.c.s
 .PHONY : CEThreads.c.s
 
 main.o: main.c.o
@@ -158,7 +229,7 @@ main.o: main.c.o
 
 # target to build an object file
 main.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Scheduling_Cars.dir/build.make CMakeFiles/Scheduling_Cars.dir/main.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.c.o
 .PHONY : main.c.o
 
 main.i: main.c.i
@@ -166,7 +237,7 @@ main.i: main.c.i
 
 # target to preprocess a source file
 main.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Scheduling_Cars.dir/build.make CMakeFiles/Scheduling_Cars.dir/main.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.c.i
 .PHONY : main.c.i
 
 main.s: main.c.s
@@ -174,7 +245,7 @@ main.s: main.c.s
 
 # target to generate assembly for a file
 main.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Scheduling_Cars.dir/build.make CMakeFiles/Scheduling_Cars.dir/main.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.c.s
 .PHONY : main.c.s
 
 # Help Target
@@ -184,8 +255,14 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... edit_cache"
+	@echo "... install"
+	@echo "... install/local"
+	@echo "... install/strip"
+	@echo "... list_install_components"
 	@echo "... rebuild_cache"
-	@echo "... Scheduling_Cars"
+	@echo "... run"
+	@echo "... CEThreads"
+	@echo "... main"
 	@echo "... CEThreads.o"
 	@echo "... CEThreads.i"
 	@echo "... CEThreads.s"
