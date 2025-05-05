@@ -17,18 +17,14 @@ set(CMAKE_MAKEFILE_DEPENDS
   "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeLanguageInformation.cmake"
   "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeSystemSpecificInformation.cmake"
   "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeSystemSpecificInitialize.cmake"
-  "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/CheckCSourceCompiles.cmake"
-  "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/CheckIncludeFile.cmake"
-  "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/CheckLibraryExists.cmake"
   "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
   "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/Compiler/GNU-C.cmake"
   "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/Compiler/GNU.cmake"
   "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/FindPackageHandleStandardArgs.cmake"
   "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/FindPackageMessage.cmake"
-  "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/FindThreads.cmake"
+  "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/FindPkgConfig.cmake"
   "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/Internal/CMakeCLinkerInformation.cmake"
   "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/Internal/CMakeCommonLinkerInformation.cmake"
-  "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/Internal/CheckSourceCompiles.cmake"
   "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/Linker/GNU-C.cmake"
   "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/Linker/GNU.cmake"
   "/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linker/GNU.cmake"
@@ -54,7 +50,5 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/CEThreads.dir/DependInfo.cmake"
-  "CMakeFiles/main.dir/DependInfo.cmake"
-  "CMakeFiles/run.dir/DependInfo.cmake"
+  "CMakeFiles/Scheduling_Cars.dir/DependInfo.cmake"
   )

@@ -6,8 +6,7 @@
 			[
 				{
 					"build" : ".",
-					"hasInstallRule" : true,
-					"jsonFile" : "directory-.-Debug-e07826403536fb2c475c.json",
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
 					"minimumCMakeVersion" : 
 					{
 						"string" : "3.10"
@@ -16,9 +15,7 @@
 					"source" : ".",
 					"targetIndexes" : 
 					[
-						0,
-						1,
-						2
+						0
 					]
 				}
 			],
@@ -30,12 +27,10 @@
 					[
 						0
 					],
-					"name" : "CEThreads_Project",
+					"name" : "Scheduling_Cars",
 					"targetIndexes" : 
 					[
-						0,
-						1,
-						2
+						0
 					]
 				}
 			],
@@ -43,23 +38,9 @@
 			[
 				{
 					"directoryIndex" : 0,
-					"id" : "CEThreads::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-CEThreads-Debug-915f18ad5ac30fd72c5a.json",
-					"name" : "CEThreads",
-					"projectIndex" : 0
-				},
-				{
-					"directoryIndex" : 0,
-					"id" : "main::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-main-Debug-5fc5398d9e39c88daad7.json",
-					"name" : "main",
-					"projectIndex" : 0
-				},
-				{
-					"directoryIndex" : 0,
-					"id" : "run::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-run-Debug-cd944a2ddaf8c1c893fe.json",
-					"name" : "run",
+					"id" : "Scheduling_Cars::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-Scheduling_Cars-Debug-b68896cf41fcf9505c06.json",
+					"name" : "Scheduling_Cars",
 					"projectIndex" : 0
 				}
 			]
