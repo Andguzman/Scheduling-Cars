@@ -887,3 +887,124 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
+/*MAIN WITH PRINTS
+ *
+ *int main() {
+    printf("Road Crossing Simulation \n");
+
+
+    // Initialize the CEThreads library
+    CEthread_lib_init();
+
+    // Initialize queues
+    init_queue(&left_queue);
+    init_queue(&right_queue);
+
+    // Read config
+    FILE* fp = fopen("config.txt", "r");
+    if (!fp) {
+        // Create a default config if file doesn't exist
+        fp = fopen("config.txt", "w");
+        if (!fp) {
+            perror("Failed to create config.txt");
+            return 1;
+        }
+
+        fprintf(fp, "flow_method=EQUITY\n");
+        fprintf(fp, "road_length=50\n");
+        fprintf(fp, "car_speed=10\n");
+        fprintf(fp, "num_left=5\n");
+        fprintf(fp, "num_right=5\n");
+        fprintf(fp, "W=3\n");
+        fprintf(fp, "signal_time=5\n");
+        fprintf(fp, "max_wait_emergency=3\n");
+        fprintf(fp, "normales_left=2\n");
+        fprintf(fp, "deportivos_left=2\n");
+        fprintf(fp, "emergencia_left=1\n");
+        fprintf(fp, "normales_right=2\n");
+        fprintf(fp, "deportivos_right=2\n");
+        fprintf(fp, "emergencia_right=1\n");
+
+        fclose(fp);
+        fp = fopen("config.txt", "r");
+        if (!fp) {
+            perror("Failed to open config.txt");
+            return 1;
+        }
+    }
+
+    char key[32], val[32];
+    while (fscanf(fp, "%31[^=]=%31s\n", key, val) == 2) {
+        if      (!strcmp(key, "flow_method"))      strcpy(flow_method, val);
+        else if (!strcmp(key, "road_length"))      road_length = atoi(val);
+        else if (!strcmp(key, "car_speed"))        base_speed = atoi(val);
+        else if (!strcmp(key, "num_left"))         num_left = atoi(val);
+        else if (!strcmp(key, "num_right"))        num_right = atoi(val);
+        else if (!strcmp(key, "W"))                W = atoi(val);
+        else if (!strcmp(key, "signal_time"))      signal_time = atoi(val);
+        else if (!strcmp(key, "max_wait_emergency")) max_wait_emergency = atoi(val);
+        else if (!strcmp(key, "normales_left"))    normales_left = atoi(val);
+        else if (!strcmp(key, "deportivos_left"))  deportivos_left = atoi(val);
+        else if (!strcmp(key, "emergencia_left"))  emergencia_left = atoi(val);
+        else if (!strcmp(key, "normales_right"))   normales_right = atoi(val);
+        else if (!strcmp(key, "deportivos_right")) deportivos_right = atoi(val);
+        else if (!strcmp(key, "emergencia_right")) emergencia_right = atoi(val);
+    }
+    fclose(fp);
+
+    // Read scheduler configuration
+    read_scheduler_config();
+
+    printf("Configuration loaded:\n");
+    printf("- Flow method: %s\n", flow_method);
+    printf("- Road length: %d\n",  road_length);
+    printf("- Base speed: %d\n", base_speed);
+    printf("- Max wait for emergency vehicles: %d seconds\n", max_wait_emergency);
+    printf("- Scheduler method: %s\n", scheduler_method);
+
+    // Initialize synchronization and state
+    CEmutex_init(&road_mutex, NULL);
+    CEcond_init(&road_cond, NULL);
+    CEmutex_init(&queue_mutex, NULL);
+
+    remaining_left  = normales_left + deportivos_left + emergencia_left;
+    remaining_right = normales_right + deportivos_right + emergencia_right;
+    cars_in_window  = 0;
+    current_dir     = LEFT;
+
+    // Launch signal thread if needed
+    CEthread_t tidSignal;
+    if (!strcmp(flow_method, "SIGNAL")) {
+        CEthread_create(&tidSignal, NULL, signal_thread, NULL);
+        // CEThreads doesn't have detach, threads are automatically cleaned up when done
+    }
+
+    // Create cars
+    int id = 0;
+
+    spawn_cars(LEFT, NORMAL, normales_left, &id);
+    spawn_cars(LEFT, SPORT, deportivos_left, &id);
+    spawn_cars(LEFT, EMERGENCY, emergencia_left, &id);
+    spawn_cars(RIGHT, NORMAL, normales_right, &id);
+    spawn_cars(RIGHT, SPORT, deportivos_right, &id);
+    spawn_cars(RIGHT, EMERGENCY, emergencia_right, &id);
+
+    // Wait until all cars have crossed
+    while (remaining_left > 0 || remaining_right > 0) {
+        usleep(100000); // Sleep 100ms to avoid busy waiting
+        CEthread_yield(); // Add yield to give other threads a chance to run
+    }
+
+    // Cleanup
+    CEmutex_destroy(&road_mutex);
+    CEcond_destroy(&road_cond);
+    CEmutex_destroy(&queue_mutex);
+
+    // Clean up the CEThreads library
+    CEthread_lib_destroy();
+
+    printf("Simulation complete. All vehicles have crossed.\n");
+    return 0;
+}
+*/
+
