@@ -8,11 +8,13 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 pkg_check_modules(CAIRO REQUIRED cairo)
 
+message(STATUS "GTK include dirs: ${GTK3_INCLUDE_DIRS}")
+
 # Include directories
 include_directories(
         ${GTK3_INCLUDE_DIRS}
         ${CAIRO_INCLUDE_DIRS}
-        ${CMAKE_CURRENT_SOURCE_DIR}  # For including CEThreads.h
+        ${CMAKE_CURRENT_SOURCE_DIR}  # For including CEThreads.
 )
 
 # Add link directories
@@ -20,6 +22,8 @@ link_directories(
         ${GTK3_LIBRARY_DIRS}
         ${CAIRO_LIBRARY_DIRS}
 )
+
+add_definitions(${GTK_CFLAGS_OTHER})
 
 # Add compile options
 add_compile_options(
@@ -45,6 +49,9 @@ target_link_libraries(${PROJECT_NAME}
         # Add any other libraries you need
         m  # Math library (if needed)
 )
+
+
+
 
 # If you have any custom CEThreads library that needs compilation
 # Uncomment and modify these lines:

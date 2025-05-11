@@ -1,1 +1,0 @@
-/usr/bin/cc  -Wall -g -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/main.dir/link.d CMakeFiles/main.dir/main.c.o -o main  libCEThreads.a

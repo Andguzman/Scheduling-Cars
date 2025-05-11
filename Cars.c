@@ -588,7 +588,7 @@ void* car_thread(void* arg) {
     return NULL;
 }
 
-void spawn_cars(Direction side, CarType type, int count, int *id) {
+GCallback spawn_cars(Direction side, CarType type, int count, int *id) {
     for (int i = 0; i < count; ++i) {
         Car *c = malloc(sizeof(Car));
         c->id = ++(*id);
@@ -889,7 +889,6 @@ void init_gui(int* argc, char*** argv) {
     gtk_widget_set_size_request(drawing_area, WINDOW_WIDTH, WINDOW_HEIGHT - 40);
     g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(on_draw), NULL);
     gtk_box_pack_start(GTK_BOX(vbox), drawing_area, TRUE, TRUE, 0);
-
     // Show all widgets
     gtk_widget_show_all(window);
 

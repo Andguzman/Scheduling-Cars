@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 #include <cairo/cairo.h>
 #include <gtk/gtk.h>
 #include "CEThreads.h"  // Replace pthread.h with CEThreads.h
@@ -15,22 +15,23 @@
 #define WINDOW_HEIGHT 600
 
 // Road dimensions
-#define ROAD_WIDTH 100
-#define ROAD_X (WINDOW_WIDTH / 2 - ROAD_WIDTH / 2)
-#define ROAD_Y 50
-#define ROAD_HEIGHT (WINDOW_HEIGHT - 100)
+#define ROAD_WIDTH 500
+#define ROAD_X WINDOW_WIDTH/2 - ROAD_WIDTH/2
+#define ROAD_Y (WINDOW_HEIGHT / 2 - (ROAD_HEIGHT / 2))
+#define ROAD_HEIGHT 100
 
 // Car dimensions
 #define CAR_WIDTH 60
 #define CAR_HEIGHT 40
 
 gboolean simulation_running = TRUE;
+int simulation_has_triggered = 0;
 
 static void set_cairo_color(cairo_t* cr, double r, double g, double b, double a) {
     cairo_set_source_rgba(cr, r/255.0, g/255.0, b/255.0, a/255.0);
 }
 
-
+void* simulation_main(void* arg);
 
 typedef enum { LEFT = 0, RIGHT = 1 } Direction;
 typedef enum { NORMAL = 0, SPORT = 1, EMERGENCY = 2 } CarType;
@@ -46,6 +47,12 @@ typedef struct {
     int active;      // Whether car is currently on the road
 } CarVisual;
 
+typedef struct {
+    Direction dir;
+    CarType type;
+    int count;  // Replace with actual type
+    int * id;
+} SpawnCarsParams;
 
 
 #define MAX_CARS_VISUAL 50
@@ -578,7 +585,7 @@ void enqueue_car(CarQueue* queue, Car* car) {
 
 void* car_thread(void* arg) {
     Car* car = (Car*)arg;
-
+    //printf("Here car %d\n", car->id);
     // Record arrival time
     clock_gettime(CLOCK_REALTIME, &car->arrival_time);
 
@@ -711,12 +718,14 @@ gboolean update_gui(gpointer data) {
     return simulation_running;
 }
 
-void spawn_cars(Direction side, CarType type, int count, int* id) {
-    for (int i = 0; i < count; ++i) {
+GCallback spawn_cars(GtkWidget *widget, GdkEventButton event, gpointer * data) {
+    SpawnCarsParams *params = (SpawnCarsParams*) data;
+
+    for (int i = 0; i < params->count; ++i) {
         Car* c = malloc(sizeof(Car));
-        c->id = ++(*id);
-        c->dir = side;
-        c->type = type;
+        c->id = ++(*params->id);
+        c->dir = params->dir;
+        c->type = params->type;
 
         CEthread_t tid;
         CEthread_create(&tid, NULL, car_thread, c);
@@ -737,28 +746,43 @@ gboolean on_draw(GtkWidget* widget, cairo_t* cr, gpointer data) {
 
     // Draw road markers
     set_cairo_color(cr, 255, 255, 255, 255);  // White
-    for (int y = ROAD_Y + 20; y < ROAD_Y + ROAD_HEIGHT; y += 40) {
-        cairo_rectangle(cr, ROAD_X + ROAD_WIDTH/2 - 2, y, 4, 20);
+    for (int x = ROAD_X + 20; x < ROAD_X + ROAD_WIDTH; x += 40) {
+        cairo_rectangle(cr, x, ROAD_Y+ ROAD_HEIGHT/2, 20, 4);
         cairo_fill(cr);
     }
 
 
     // Draw labels for queues
-    set_cairo_color(cr, 0, 0, 0, 255);  // Black text
-    cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-    cairo_set_font_size(cr, 16);
+    //set_cairo_color(cr, 0, 0, 0, 255);  // Black text
+    //cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+    //cairo_set_font_size(cr, 16);
 
-    cairo_move_to(cr, 50, 80);
-    cairo_show_text(cr, "Left Queue");
+    //cairo_move_to(cr, 50, 80);
+    //cairo_show_text(cr, "Left Queue");
 
-    cairo_move_to(cr, WINDOW_WIDTH - 50 - 100, 80);
-    cairo_show_text(cr, "Right Queue");
+    //cairo_move_to(cr, WINDOW_WIDTH - 50 - 100, 80);
+   // cairo_show_text(cr, "Right Queue");
 
     return FALSE;
 }
 
+GCallback startRunningSimulation() {
+    printf("Starting Simulation\n");
+    // Create a thread for simulation
+    CEthread_t simulation_thread;
+    CEthread_create(&simulation_thread, NULL, simulation_main, NULL);
 
-void init_gui(int* argc, char*** argv) {
+    // Mark simulation as complete
+    simulation_running = FALSE;
+
+    // Wait for simulation thread to complete
+    CEthread_join(simulation_thread, NULL);
+    printf("Simulation stopped\n");
+}
+
+
+
+void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, SpawnCarsParams * paramsRight) {
     gtk_init(argc, argv);
 
     // Create main window
@@ -777,14 +801,33 @@ void init_gui(int* argc, char*** argv) {
     gtk_widget_set_size_request(drawing_area, WINDOW_WIDTH - 20, WINDOW_HEIGHT - 20);
     g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(on_draw), NULL);
     gtk_box_pack_start(GTK_BOX(vbox), drawing_area, TRUE, TRUE, 0);
-
     // Add control buttons
     GtkWidget* hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     gtk_box_pack_end(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
-    GtkWidget* quit_button = gtk_button_new_with_label("Quit");
-    g_signal_connect(quit_button, "clicked", G_CALLBACK(gtk_main_quit), NULL);
-    gtk_box_pack_end(GTK_BOX(hbox), quit_button, FALSE, FALSE, 0);
+    GtkWidget* spawn_left_button = gtk_button_new_with_label("Spawn");
+
+
+    paramsLeft->dir = LEFT;
+    paramsLeft->id = id;
+    paramsLeft->count = normales_left;
+    paramsLeft->type = NORMAL;
+    g_signal_connect(spawn_left_button, "clicked", G_CALLBACK(spawn_cars), paramsLeft);
+    //spawn_cars(LEFT, NORMAL, normales_left, id);
+    gtk_box_pack_start(GTK_BOX(hbox), spawn_left_button, FALSE, FALSE, 0);
+
+    GtkWidget* run_button = gtk_button_new_with_label("Run");
+    g_signal_connect(run_button, "clicked", G_CALLBACK(startRunningSimulation), NULL);
+    gtk_box_pack_end(GTK_BOX(hbox), run_button, FALSE, FALSE, 0);
+
+    GtkWidget* spawn_right_button = gtk_button_new_with_label("Spawn");
+    paramsRight->id = id;
+    paramsRight->dir = RIGHT;
+    paramsRight->count = normales_right;
+    paramsRight->type = NORMAL;
+    g_signal_connect(spawn_right_button, "clicked", G_CALLBACK(spawn_cars), paramsRight);
+    //(RIGHT, NORMAL, normales_right, id)
+    gtk_box_pack_end(GTK_BOX(hbox), spawn_right_button, FALSE, FALSE, 0);
 
     // Show all widgets
     gtk_widget_show_all(window);
@@ -792,6 +835,8 @@ void init_gui(int* argc, char*** argv) {
     // Start timer for regular updates (60 FPS)
     g_timeout_add(16, update_gui, drawing_area);
 }
+
+
 
 // Simulation thread function
 void* simulation_main(void* arg) {
@@ -810,7 +855,7 @@ void* simulation_main(void* arg) {
     if (!strcmp(flow_method, "SIGNAL")) {
         CEthread_create(&tidSignal, NULL, signal_thread, NULL);
     }
-
+/*
     // Create cars
     int id = 0;
 
@@ -820,12 +865,16 @@ void* simulation_main(void* arg) {
     spawn_cars(RIGHT, NORMAL, normales_right, &id);
     spawn_cars(RIGHT, SPORT, deportivos_right, &id);
     spawn_cars(RIGHT, EMERGENCY, emergencia_right, &id);
-
+*/
     // Wait until all cars have crossed
     while ((remaining_left > 0 || remaining_right > 0) && simulation_running) {
         usleep(100000); // Sleep 100ms to avoid busy waiting
         CEthread_yield(); // Add yield to give other threads a chance to run
     }
+
+    CEmutex_destroy(&road_mutex);
+    CEcond_destroy(&road_cond);
+    CEmutex_destroy(&queue_mutex);
 
     return NULL;
 }
@@ -850,34 +899,47 @@ int main(int argc, char* argv[]) {
     }
 
     // Read config
-    FILE* fp = fopen("config.txt", "r");
+    FILE* fp = fopen("/home/alexis/Documents/Tec/SO/Scheduling-Cars/config.txt", "r");
     if (!fp) {
-        // Create a default config if file doesn't exist
-        // ... (rest of config handling unchanged)
+        printf("Failed to open config file\n");
     }
-
+    char key[32], val[32];
+    while (fscanf(fp, "%31[^=]=%31s\n", key, val) == 2) {
+        if      (!strcmp(key, "flow_method"))      strcpy(flow_method, val);
+        else if (!strcmp(key, "road_length"))      road_length = atoi(val);
+        else if (!strcmp(key, "car_speed"))        base_speed = atoi(val);
+        else if (!strcmp(key, "num_left"))         num_left = atoi(val);
+        else if (!strcmp(key, "num_right"))        num_right = atoi(val);
+        else if (!strcmp(key, "W"))                W = atoi(val);
+        else if (!strcmp(key, "signal_time"))      signal_time = atoi(val);
+        else if (!strcmp(key, "max_wait_emergency")) max_wait_emergency = atoi(val);
+        else if (!strcmp(key, "normales_left"))    normales_left = atoi(val);
+        else if (!strcmp(key, "deportivos_left"))  deportivos_left = atoi(val);
+        else if (!strcmp(key, "emergencia_left"))  emergencia_left = atoi(val);
+        else if (!strcmp(key, "normales_right"))   normales_right = atoi(val);
+        else if (!strcmp(key, "deportivos_right")) deportivos_right = atoi(val);
+        else if (!strcmp(key, "emergencia_right")) emergencia_right = atoi(val);
+    }
+    fclose(fp);
     // ... (rest of configuration and initialization unchanged)
-
+    read_scheduler_config();
     // Initialize GUI
-    init_gui(&argc, &argv);
+    int id = 0;
 
-    // Create a thread for simulation
-    CEthread_t simulation_thread;
-    CEthread_create(&simulation_thread, NULL, simulation_main, NULL);
+    SpawnCarsParams * paramsLeft = malloc(sizeof(SpawnCarsParams));
+    SpawnCarsParams * paramsRight = malloc(sizeof(SpawnCarsParams));
+    init_gui(&argc, &argv, &id, paramsLeft, paramsRight);
+
 
     // Start the GTK main loop
     gtk_main();
 
-    // Mark simulation as complete
-    simulation_running = FALSE;
-
-    // Wait for simulation thread to complete
-    CEthread_join(simulation_thread, NULL);
-
+    free(paramsLeft);
+    free(paramsRight);
     // Cleanup
-    CEmutex_destroy(&road_mutex);
+    /*CEmutex_destroy(&road_mutex);
     CEcond_destroy(&road_cond);
-    CEmutex_destroy(&queue_mutex);
+    CEmutex_destroy(&queue_mutex);*/
     CEmutex_destroy(&visual_mutex);
 
     // Clean up the CEThreads library

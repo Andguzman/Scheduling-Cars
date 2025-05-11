@@ -1,3 +1,0 @@
-/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug/CMakeFiles/Scheduling_Cars.dir
-/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug/CMakeFiles/rebuild_cache.dir
