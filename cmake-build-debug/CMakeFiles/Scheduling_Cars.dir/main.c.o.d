@@ -1,5 +1,5 @@
 CMakeFiles/Scheduling_Cars.dir/main.c.o: \
- /home/andres/Desktop/Operativos/Scheduling-Cars/main.c \
+ /home/alexis/Documents/Tec/SO/Scheduling-Cars/main.c \
  /usr/include/stdc-predef.h /usr/include/stdio.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/features-time64.h \
@@ -9,8 +9,8 @@ CMakeFiles/Scheduling_Cars.dir/main.c.o: \
  /usr/include/x86_64-linux-gnu/bits/long-double.h \
  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/stdarg.h \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
  /usr/include/x86_64-linux-gnu/bits/types.h \
  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
  /usr/include/x86_64-linux-gnu/bits/time64.h \
@@ -20,7 +20,6 @@ CMakeFiles/Scheduling_Cars.dir/main.c.o: \
  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
- /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
  /usr/include/x86_64-linux-gnu/bits/floatn.h \
  /usr/include/x86_64-linux-gnu/bits/floatn-common.h /usr/include/stdlib.h \
@@ -69,17 +68,16 @@ CMakeFiles/Scheduling_Cars.dir/main.c.o: \
  /usr/include/glib-2.0/glib/gtypes.h \
  /usr/lib/x86_64-linux-gnu/glib-2.0/include/glibconfig.h \
  /usr/include/glib-2.0/glib/gmacros.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/limits.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
  /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
  /usr/include/linux/limits.h \
  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/float.h \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/float.h \
  /usr/include/glib-2.0/glib/gversionmacros.h \
- /usr/include/glib-2.0/glib/glib-visibility.h \
  /usr/include/glib-2.0/glib/garray.h \
  /usr/include/glib-2.0/glib/gasyncqueue.h \
  /usr/include/glib-2.0/glib/gthread.h \
@@ -133,7 +131,6 @@ CMakeFiles/Scheduling_Cars.dir/main.c.o: \
  /usr/include/glib-2.0/glib/gmain.h /usr/include/glib-2.0/glib/gpoll.h \
  /usr/include/glib-2.0/glib/gslist.h /usr/include/glib-2.0/glib/gstring.h \
  /usr/include/glib-2.0/glib/gunicode.h \
- /usr/include/glib-2.0/glib/gstrfuncs.h \
  /usr/include/glib-2.0/glib/gkeyfile.h \
  /usr/include/glib-2.0/glib/gmappedfile.h \
  /usr/include/glib-2.0/glib/gmarkup.h \
@@ -141,7 +138,6 @@ CMakeFiles/Scheduling_Cars.dir/main.c.o: \
  /usr/include/glib-2.0/glib/gvariant.h \
  /usr/include/glib-2.0/glib/gvarianttype.h \
  /usr/include/glib-2.0/glib/goption.h \
- /usr/include/glib-2.0/glib/gpathbuf.h \
  /usr/include/glib-2.0/glib/gpattern.h \
  /usr/include/glib-2.0/glib/gprimes.h /usr/include/glib-2.0/glib/gqsort.h \
  /usr/include/glib-2.0/glib/gqueue.h /usr/include/glib-2.0/glib/grand.h \
@@ -154,6 +150,7 @@ CMakeFiles/Scheduling_Cars.dir/main.c.o: \
  /usr/include/glib-2.0/glib/gsequence.h \
  /usr/include/glib-2.0/glib/gshell.h /usr/include/glib-2.0/glib/gslice.h \
  /usr/include/glib-2.0/glib/gspawn.h \
+ /usr/include/glib-2.0/glib/gstrfuncs.h \
  /usr/include/glib-2.0/glib/gstringchunk.h \
  /usr/include/glib-2.0/glib/gstrvbuilder.h \
  /usr/include/glib-2.0/glib/gtestutils.h /usr/include/errno.h \
@@ -184,7 +181,6 @@ CMakeFiles/Scheduling_Cars.dir/main.c.o: \
  /usr/include/glib-2.0/gobject/gbinding.h \
  /usr/include/glib-2.0/gobject/gobject.h \
  /usr/include/glib-2.0/gobject/gtype.h \
- /usr/include/glib-2.0/gobject/gobject-visibility.h \
  /usr/include/glib-2.0/gobject/gvalue.h \
  /usr/include/glib-2.0/gobject/gparam.h \
  /usr/include/glib-2.0/gobject/gclosure.h \
@@ -203,7 +199,6 @@ CMakeFiles/Scheduling_Cars.dir/main.c.o: \
  /usr/include/glib-2.0/gobject/gvaluearray.h \
  /usr/include/glib-2.0/gobject/gvaluetypes.h \
  /usr/include/glib-2.0/gobject/gobject-autocleanups.h \
- /usr/include/glib-2.0/gio/gio-visibility.h \
  /usr/include/glib-2.0/gio/gaction.h \
  /usr/include/glib-2.0/gio/gactiongroup.h \
  /usr/include/glib-2.0/gio/gactiongroupexporter.h \
@@ -280,7 +275,6 @@ CMakeFiles/Scheduling_Cars.dir/main.c.o: \
  /usr/include/glib-2.0/gio/gsocketaddress.h \
  /usr/include/glib-2.0/gio/gioenumtypes.h \
  /usr/include/glib-2.0/gio/giomodule.h /usr/include/glib-2.0/gmodule.h \
- /usr/include/glib-2.0/gmodule/gmodule-visibility.h \
  /usr/include/glib-2.0/gio/gioscheduler.h \
  /usr/include/glib-2.0/gio/glistmodel.h \
  /usr/include/glib-2.0/gio/gliststore.h \
@@ -349,10 +343,6 @@ CMakeFiles/Scheduling_Cars.dir/main.c.o: \
  /usr/include/glib-2.0/gio/gtlsinteraction.h \
  /usr/include/glib-2.0/gio/gtlspassword.h \
  /usr/include/glib-2.0/gio/gtlsserverconnection.h \
- /usr/include/glib-2.0/gio/gunixconnection.h \
- /usr/include/glib-2.0/gio/gunixcredentialsmessage.h \
- /usr/include/glib-2.0/gio/gunixfdlist.h \
- /usr/include/glib-2.0/gio/gunixsocketaddress.h \
  /usr/include/glib-2.0/gio/gvfs.h /usr/include/glib-2.0/gio/gvolume.h \
  /usr/include/glib-2.0/gio/gzlibcompressor.h \
  /usr/include/glib-2.0/gio/gzlibdecompressor.h \
@@ -364,17 +354,16 @@ CMakeFiles/Scheduling_Cars.dir/main.c.o: \
  /usr/include/pango-1.0/pango/pango-version-macros.h \
  /usr/include/pango-1.0/pango/pango-features.h /usr/include/harfbuzz/hb.h \
  /usr/include/harfbuzz/hb-blob.h /usr/include/harfbuzz/hb-common.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h /usr/include/stdint.h \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h /usr/include/stdint.h \
  /usr/include/x86_64-linux-gnu/bits/wchar.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
- /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
  /usr/include/harfbuzz/hb-buffer.h /usr/include/harfbuzz/hb-unicode.h \
  /usr/include/harfbuzz/hb-font.h /usr/include/harfbuzz/hb-face.h \
- /usr/include/harfbuzz/hb-map.h /usr/include/harfbuzz/hb-set.h \
- /usr/include/harfbuzz/hb-draw.h /usr/include/harfbuzz/hb.h \
- /usr/include/harfbuzz/hb-paint.h /usr/include/harfbuzz/hb-deprecated.h \
- /usr/include/harfbuzz/hb-shape.h /usr/include/harfbuzz/hb-shape-plan.h \
- /usr/include/harfbuzz/hb-style.h /usr/include/harfbuzz/hb-version.h \
+ /usr/include/harfbuzz/hb-set.h /usr/include/harfbuzz/hb-draw.h \
+ /usr/include/harfbuzz/hb.h /usr/include/harfbuzz/hb-deprecated.h \
+ /usr/include/harfbuzz/hb-map.h /usr/include/harfbuzz/hb-shape.h \
+ /usr/include/harfbuzz/hb-shape-plan.h /usr/include/harfbuzz/hb-style.h \
+ /usr/include/harfbuzz/hb-version.h \
  /usr/include/pango-1.0/pango/pango-types.h \
  /usr/include/pango-1.0/pango/pango-gravity.h \
  /usr/include/pango-1.0/pango/pango-matrix.h \
@@ -446,22 +435,22 @@ CMakeFiles/Scheduling_Cars.dir/main.c.o: \
  /usr/include/gtk-3.0/gtk/gtkaccelgroup.h \
  /usr/include/gtk-3.0/gtk/gtkenums.h /usr/include/gtk-3.0/gtk/gtkborder.h \
  /usr/include/gtk-3.0/gtk/gtktypes.h /usr/include/atk-1.0/atk/atk.h \
- /usr/include/atk-1.0/atk/atk-enum-types.h \
- /usr/include/atk-1.0/atk/atkversion.h \
- /usr/include/atk-1.0/atk/atkaction.h \
  /usr/include/atk-1.0/atk/atkobject.h \
- /usr/include/atk-1.0/atk/atkrelationtype.h \
+ /usr/include/atk-1.0/atk/atkversion.h \
  /usr/include/atk-1.0/atk/atkstate.h \
+ /usr/include/atk-1.0/atk/atkrelationtype.h \
+ /usr/include/atk-1.0/atk/atkaction.h \
  /usr/include/atk-1.0/atk/atkcomponent.h \
  /usr/include/atk-1.0/atk/atkutil.h \
  /usr/include/atk-1.0/atk/atkdocument.h \
  /usr/include/atk-1.0/atk/atkeditabletext.h \
  /usr/include/atk-1.0/atk/atktext.h \
+ /usr/include/atk-1.0/atk/atk-enum-types.h \
  /usr/include/atk-1.0/atk/atkgobjectaccessible.h \
  /usr/include/atk-1.0/atk/atkhyperlink.h \
  /usr/include/atk-1.0/atk/atkhyperlinkimpl.h \
  /usr/include/atk-1.0/atk/atkhypertext.h \
- /usr/include/atk-1.0/atk/atkimage.h /usr/include/atk-1.0/atk/atkmisc.h \
+ /usr/include/atk-1.0/atk/atkimage.h \
  /usr/include/atk-1.0/atk/atknoopobject.h \
  /usr/include/atk-1.0/atk/atknoopobjectfactory.h \
  /usr/include/atk-1.0/atk/atkobjectfactory.h \
@@ -476,9 +465,8 @@ CMakeFiles/Scheduling_Cars.dir/main.c.o: \
  /usr/include/atk-1.0/atk/atkstreamablecontent.h \
  /usr/include/atk-1.0/atk/atktable.h \
  /usr/include/atk-1.0/atk/atktablecell.h \
- /usr/include/atk-1.0/atk/atkvalue.h /usr/include/atk-1.0/atk/atkwindow.h \
- /usr/include/atk-1.0/atk/atk-autocleanups.h \
- /usr/include/gtk-3.0/gtk/gtkbin.h \
+ /usr/include/atk-1.0/atk/atkmisc.h /usr/include/atk-1.0/atk/atkvalue.h \
+ /usr/include/atk-1.0/atk/atkwindow.h /usr/include/gtk-3.0/gtk/gtkbin.h \
  /usr/include/gtk-3.0/gtk/gtkcontainer.h \
  /usr/include/gtk-3.0/gtk/gtkaccellabel.h \
  /usr/include/gtk-3.0/gtk/gtklabel.h \
@@ -658,7 +646,7 @@ CMakeFiles/Scheduling_Cars.dir/main.c.o: \
  /usr/include/gtk-3.0/gtk/gtkshortcutsgroup.h \
  /usr/include/gtk-3.0/gtk/gtkshortcutssection.h \
  /usr/include/gtk-3.0/gtk/gtkshortcutsshortcut.h \
- /usr/include/gtk-3.0/gtk/gtkshow.h \
+ /usr/include/gtk-3.0/gtk/gtk.h /usr/include/gtk-3.0/gtk/gtkshow.h \
  /usr/include/gtk-3.0/gtk/gtkstacksidebar.h \
  /usr/include/gtk-3.0/gtk/gtkstack.h \
  /usr/include/gtk-3.0/gtk/gtksizerequest.h \
@@ -726,6 +714,6 @@ CMakeFiles/Scheduling_Cars.dir/main.c.o: \
  /usr/include/gtk-3.0/gtk/deprecated/gtkvscrollbar.h \
  /usr/include/gtk-3.0/gtk/deprecated/gtkvseparator.h \
  /usr/include/gtk-3.0/gtk/gtk-autocleanups.h \
- /home/andres/Desktop/Operativos/Scheduling-Cars/CEThreads.h \
+ /home/alexis/Documents/Tec/SO/Scheduling-Cars/CEThreads.h \
  /usr/include/ucontext.h \
  /usr/include/x86_64-linux-gnu/bits/indirect-return.h

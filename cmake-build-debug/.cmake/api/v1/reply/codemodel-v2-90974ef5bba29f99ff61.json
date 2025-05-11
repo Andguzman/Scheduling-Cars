@@ -39,7 +39,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "Scheduling_Cars::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-Scheduling_Cars-Debug-b68896cf41fcf9505c06.json",
+					"jsonFile" : "target-Scheduling_Cars-Debug-43c519d870e4d890ce9d.json",
 					"name" : "Scheduling_Cars",
 					"projectIndex" : 0
 				}
@@ -49,8 +49,8 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug",
-		"source" : "/home/andres/Desktop/Operativos/Scheduling-Cars"
+		"build" : "/home/alexis/Documents/Tec/SO/Scheduling-Cars/cmake-build-debug",
+		"source" : "/home/alexis/Documents/Tec/SO/Scheduling-Cars"
 	},
 	"version" : 
 	{

@@ -4,7 +4,7 @@
 #include <string.h>
 #include <time.h>
 #include <cairo/cairo.h>
-#include <gtk/gtk.h>
+#include <gtk-3.0/gtk/gtk.h>
 #include "CEThreads.h"  // Replace pthread.h with CEThreads.h
 
 // Simulación de cruce de una sola vía con modos FIFO, EQUITY y LETRERO (SIGNAL)
