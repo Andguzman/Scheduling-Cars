@@ -1,15 +1,4 @@
-/snap/clion/341/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "Unix Makefiles" -S /home/alexis/Documents/Tec/SO/Scheduling-Cars -B /home/alexis/Documents/Tec/SO/Scheduling-Cars/cmake-build-debug
--- The C compiler identification is GNU 11.4.0
--- Detecting C compiler ABI info
--- Detecting C compiler ABI info - done
--- Check for working C compiler: /usr/bin/cc - skipped
--- Detecting C compile features
--- Detecting C compile features - done
--- Found PkgConfig: /usr/bin/pkg-config (found version "0.29.2")
--- Checking for module 'gtk+-3.0'
---   Found gtk+-3.0, version 3.24.33
--- Checking for module 'cairo'
---   Found cairo, version 1.16.0
--- Configuring done (0.6s)
+/home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -G "Unix Makefiles" -S /home/andres/Desktop/Operativos/Scheduling-Cars -B /home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug
+-- Configuring done (0.0s)
 -- Generating done (0.0s)
--- Build files have been written to: /home/alexis/Documents/Tec/SO/Scheduling-Cars/cmake-build-debug
+-- Build files have been written to: /home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug

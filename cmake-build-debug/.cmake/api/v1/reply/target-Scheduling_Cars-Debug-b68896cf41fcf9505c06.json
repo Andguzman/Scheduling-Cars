@@ -71,6 +71,66 @@
 				},
 				{
 					"backtrace" : 4,
+					"path" : "/usr/include/pango-1.0"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "/usr/include/glib-2.0"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "/usr/lib/x86_64-linux-gnu/glib-2.0/include"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "/usr/include/harfbuzz"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "/usr/include/freetype2"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "/usr/include/libpng16"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "/usr/include/libmount"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "/usr/include/blkid"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "/usr/include/fribidi"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "/usr/include/cairo"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "/usr/include/pixman-1"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "/usr/include/gdk-pixbuf-2.0"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "/usr/include/webp"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "/usr/include/gio-unix-2.0"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "/usr/include/atk-1.0"
+				},
+				{
+					"backtrace" : 4,
 					"path" : "/usr/include/at-spi2-atk/2.0"
 				},
 				{
@@ -87,67 +147,7 @@
 				},
 				{
 					"backtrace" : 4,
-					"path" : "/usr/include/gio-unix-2.0"
-				},
-				{
-					"backtrace" : 4,
-					"path" : "/usr/include/cairo"
-				},
-				{
-					"backtrace" : 4,
-					"path" : "/usr/include/pango-1.0"
-				},
-				{
-					"backtrace" : 4,
-					"path" : "/usr/include/harfbuzz"
-				},
-				{
-					"backtrace" : 4,
-					"path" : "/usr/include/fribidi"
-				},
-				{
-					"backtrace" : 4,
-					"path" : "/usr/include/atk-1.0"
-				},
-				{
-					"backtrace" : 4,
-					"path" : "/usr/include/pixman-1"
-				},
-				{
-					"backtrace" : 4,
-					"path" : "/usr/include/uuid"
-				},
-				{
-					"backtrace" : 4,
-					"path" : "/usr/include/freetype2"
-				},
-				{
-					"backtrace" : 4,
-					"path" : "/usr/include/gdk-pixbuf-2.0"
-				},
-				{
-					"backtrace" : 4,
-					"path" : "/usr/include/libpng16"
-				},
-				{
-					"backtrace" : 4,
-					"path" : "/usr/include/libmount"
-				},
-				{
-					"backtrace" : 4,
-					"path" : "/usr/include/blkid"
-				},
-				{
-					"backtrace" : 4,
-					"path" : "/usr/include/glib-2.0"
-				},
-				{
-					"backtrace" : 4,
-					"path" : "/usr/lib/x86_64-linux-gnu/glib-2.0/include"
-				},
-				{
-					"backtrace" : 4,
-					"path" : "/home/alexis/Documents/Tec/SO/Scheduling-Cars"
+					"path" : "/home/andres/Desktop/Operativos/Scheduling-Cars"
 				}
 			],
 			"language" : "C",
@@ -187,6 +187,11 @@
 			{
 				"backtrace" : 2,
 				"fragment" : "-lgdk-3",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "-lz",
 				"role" : "libraries"
 			},
 			{
