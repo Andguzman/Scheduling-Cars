@@ -780,7 +780,19 @@ GCallback startRunningSimulation() {
     printf("Simulation stopped\n");
 }
 
-
+GCallback change_car_type(GtkWidget *widget, GdkEventButton event, gpointer * data) {
+    SpawnCarsParams *params = (SpawnCarsParams*) data;
+    GtkComboBoxText * combo_box = (GtkComboBoxText *)widget;
+    const gchar * setType = gtk_combo_box_text_get_active_text(combo_box);
+    if (g_ascii_strcasecmp(setType, "Normal") == 0) {
+        params->type = NORMAL;
+    }else if (g_ascii_strcasecmp(setType, "Deportivo") == 0) {
+        params->type = SPORT;
+    }else {
+        params->type = EMERGENCY;
+    }
+    printf("Car type changed %d\n", params->type);
+}
 
 void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, SpawnCarsParams * paramsRight) {
     gtk_init(argc, argv);
@@ -821,6 +833,7 @@ void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, S
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(comboLeft), "Emergencia");
     gtk_combo_box_set_active(GTK_COMBO_BOX(comboLeft), 0);
     gtk_box_pack_start(GTK_BOX(hbox), comboLeft, FALSE, FALSE, 0);
+    g_signal_connect(comboLeft, "changed", G_CALLBACK(change_car_type), paramsLeft);
 
     //Botón de spawn derecho
     GtkWidget* spawn_right_button = gtk_button_new_with_label("Spawn");
@@ -838,6 +851,7 @@ void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, S
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(comboRight), "Emergencia");
     gtk_combo_box_set_active(GTK_COMBO_BOX(comboRight), 0);
     gtk_box_pack_end(GTK_BOX(hbox), comboRight, FALSE, FALSE, 0);
+    g_signal_connect(comboRight, "changed", G_CALLBACK(change_car_type), paramsRight);
 
     //Botón de correr
     GtkWidget* run_button = gtk_button_new_with_label("Run");
