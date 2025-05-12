@@ -643,7 +643,7 @@ void* car_thread(void* arg) {
     road_occupied_dir = car->dir;
 
     // Add car to visualization when it enters the road
-    add_car_visual(car->id, car->dir, car->type);
+    //add_car_visual(car->id, car->dir, car->type);
 
     // Actual crossing
     printf("[Enter ] Car %d [%s] from %s side (Scheduler: %s). Total cars on road: LEFT=%d, RIGHT=%d\n",
@@ -720,7 +720,6 @@ gboolean update_gui(gpointer data) {
 
 GCallback spawn_cars(GtkWidget *widget, GdkEventButton event, gpointer * data) {
     SpawnCarsParams *params = (SpawnCarsParams*) data;
-
     for (int i = 0; i < params->count; ++i) {
         Car* c = malloc(sizeof(Car));
         c->id = ++(*params->id);
@@ -791,7 +790,6 @@ GCallback change_car_type(GtkWidget *widget, GdkEventButton event, gpointer * da
     }else {
         params->type = EMERGENCY;
     }
-    printf("Car type changed %d\n", params->type);
 }
 
 void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, SpawnCarsParams * paramsRight) {
