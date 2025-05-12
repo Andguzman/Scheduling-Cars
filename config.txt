@@ -8,7 +8,8 @@ signal_time=5
 max_wait_emergency=3
 normales_left=2
 deportivos_left=2
-emergencia_left=1
+emergencia_left=0
 normales_right=2
 deportivos_right=2
-emergencia_right=1
+emergencia_right=0
+

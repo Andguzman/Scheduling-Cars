@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,8 +25,9 @@
 #define CAR_WIDTH 60
 #define CAR_HEIGHT 40
 
-gboolean simulation_running = TRUE;
-int simulation_has_triggered = 0;
+gboolean simulation_running = FALSE;
+
+gboolean update_gui(gpointer data);
 
 static void set_cairo_color(cairo_t* cr, double r, double g, double b, double a) {
     cairo_set_source_rgba(cr, r/255.0, g/255.0, b/255.0, a/255.0);
@@ -53,6 +55,10 @@ typedef struct {
     int x;
     int y;
 } CarDraw;
+
+CarDraw * car_drawn;
+int start_drawing_cars = 0;
+GCallback spawn_cars(GtkWidget *widget, GdkEventButton event, gpointer * data);
 
 typedef struct {
     Direction dir;
@@ -160,7 +166,8 @@ int normales_right, deportivos_right, emergencia_right;
 // Estado para EQUITY y SIGNAL
 Direction current_dir;
 int cars_in_window;
-int remaining_left, remaining_right;
+int remaining_left = 0;
+int remaining_right = 0;
 int emergency_vehicles_waiting_left = 0;
 int emergency_vehicles_waiting_right = 0;
 
@@ -593,69 +600,71 @@ void enqueue_car(CarQueue* queue, Car* car) {
 }
 
 GCallback paint_car(GtkWidget* widget, cairo_t *cr, gpointer data) {
-    CarDraw * car_draw = (CarDraw*)data;
-    int xPos = car_draw->x;
-    int speed = 2;
-    int laneAdjust = 0;
-    if (car_draw->dir == LEFT) {
-        laneAdjust = 53;
-    }
-
-    if (car_draw->type == NORMAL) {
-        set_cairo_color(cr, 102, 178, 255, 255);//Cuerpo del cuarto
-        cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, 50, ROAD_HEIGHT/2-20);
-        cairo_fill(cr);
-        int directionOffset = xPos;
+    if (start_drawing_cars == 1) {
+        CarDraw * car_draw = (CarDraw*)data;
+        int xPos = car_draw->x;
+        int speed = 2;
+        int laneAdjust = 0;
         if (car_draw->dir == LEFT) {
-            directionOffset += 45;
+            laneAdjust = 53;
         }
-        set_cairo_color(cr, 255, 255, 0, 255);//Luces
-        cairo_rectangle(cr, ROAD_X+10+directionOffset, ROAD_Y+14+laneAdjust, 5, 5);
-        cairo_fill(cr);
 
-        cairo_rectangle(cr, ROAD_X+10+directionOffset, ROAD_Y+31+laneAdjust, 5, 5);
-        cairo_fill(cr);
-    }
-    else if (car_draw->type == SPORT) {
-        set_cairo_color(cr, 255, 128, 0, 255);//Cuerpo del carro
-        cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, 50, ROAD_HEIGHT/2-20);
-        cairo_fill(cr);
+        if (car_draw->type == NORMAL) {
+            set_cairo_color(cr, 102, 178, 255, 255);//Cuerpo del cuarto
+            cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, 50, ROAD_HEIGHT/2-20);
+            cairo_fill(cr);
+            int directionOffset = xPos;
+            if (car_draw->dir == LEFT) {
+                directionOffset += 45;
+            }
+            set_cairo_color(cr, 255, 255, 0, 255);//Luces
+            cairo_rectangle(cr, ROAD_X+10+directionOffset, ROAD_Y+14+laneAdjust, 5, 5);
+            cairo_fill(cr);
 
-        set_cairo_color(cr, 0, 0, 0, 255);//Detalles
-        cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+14+laneAdjust, 50, 5);
-        cairo_fill(cr);
+            cairo_rectangle(cr, ROAD_X+10+directionOffset, ROAD_Y+31+laneAdjust, 5, 5);
+            cairo_fill(cr);
+        }
+        else if (car_draw->type == SPORT) {
+            set_cairo_color(cr, 255, 128, 0, 255);//Cuerpo del carro
+            cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, 50, ROAD_HEIGHT/2-20);
+            cairo_fill(cr);
 
-        set_cairo_color(cr, 0, 0, 0, 255);
-        cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+31+laneAdjust, 50, 5);
-        cairo_fill(cr);
-        speed = 4;
-    }else {
-        set_cairo_color(cr, 255, 255, 255, 255);
-        cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, 50, ROAD_HEIGHT/2-20);
-        cairo_fill(cr);
-        int directionOffset = xPos;
+            set_cairo_color(cr, 0, 0, 0, 255);//Detalles
+            cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+14+laneAdjust, 50, 5);
+            cairo_fill(cr);
+
+            set_cairo_color(cr, 0, 0, 0, 255);
+            cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+31+laneAdjust, 50, 5);
+            cairo_fill(cr);
+            speed = 4;
+        }else {
+            set_cairo_color(cr, 255, 255, 255, 255);
+            cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, 50, ROAD_HEIGHT/2-20);
+            cairo_fill(cr);
+            int directionOffset = xPos;
+            if (car_draw->dir == LEFT) {
+                directionOffset += 32;
+            }
+            set_cairo_color(cr, 255, 0, 0, 255);
+            cairo_rectangle(cr, ROAD_X+15+directionOffset, ROAD_Y+20+laneAdjust, 5, 9);
+            cairo_fill(cr);
+            speed = 6;
+        }
+
         if (car_draw->dir == LEFT) {
-            directionOffset += 32;
-        }
-        set_cairo_color(cr, 255, 0, 0, 255);
-        cairo_rectangle(cr, ROAD_X+15+directionOffset, ROAD_Y+20+laneAdjust, 5, 9);
-        cairo_fill(cr);
-        speed = 6;
-    }
-
-    if (car_draw->dir == LEFT) {
-        xPos += speed;
-        if (xPos <= ROAD_WIDTH - 60) {
-            car_draw->x = xPos;
-        }else {
-            car_draw->x = 0;
-        }
-    }else{
-       xPos -= speed;
-        if (xPos <= 10) {
-            car_draw->x = ROAD_WIDTH - 60;
-        }else {
-            car_draw->x = xPos;
+            xPos += speed;
+            if (xPos <= ROAD_WIDTH - 60) {
+                car_draw->x = xPos;
+            }else {
+                car_draw->x = 0;
+            }
+        }else{
+           xPos -= speed;
+            if (xPos <= 10) {
+                car_draw->x = ROAD_WIDTH - 60;
+            }else {
+                car_draw->x = xPos;
+            }
         }
     }
 
@@ -960,11 +969,12 @@ void* car_thread(void* arg) {
     //add_car_visual(car->id, car->dir, car->type);
 
     // Actual crossing
-    //g_signal_connect(drawing_area, "draw", G_CALLBACK(paint_car), NULL);
     printf("[Enter ] Car %d [%s] from %s side (Scheduler: %s). Total cars on road: LEFT=%d, RIGHT=%d\n",
            car->id, type_name(car->type),
            car->dir == LEFT ? "LEFT" : "RIGHT", scheduler_method,
            cars_on_road_left, cars_on_road_right);
+
+
 
     // For Round Robin, set time slice remaining
     int rr_timeout = 0;
@@ -999,10 +1009,15 @@ void* car_thread(void* arg) {
         }
     } else {
         // Regular crossing for other schedulers
-
+        //CarDraw * car_drawn = malloc(sizeof(CarDraw));
+        //car_drawn->x = 0;
+        //car_drawn->type = car->type;
+        //car_drawn->dir = car->type;
         while (((double)(clock() - begin_time)) / CLOCKS_PER_SEC < travel_time_seconds) {
-            //g_signal_connect(drawing_area, "draw", G_CALLBACK(paint_car), NULL);
+            //g_signal_connect(drawing_area, "draw", G_CALLBACK(paint_car), car_drawn);
         }
+
+        //free(car_drawn);
         //usleep(travel_time_us);
     }
 
@@ -1017,6 +1032,13 @@ void* car_thread(void* arg) {
     } else {
         cars_on_road_right--;
         remaining_right--;
+    }
+
+    printf("Remaining L: %d Reamining R: %d \n", remaining_left, remaining_right);
+
+    if (remaining_left == 0 && remaining_right == 0) {
+        printf("Finished \n");
+        start_drawing_cars = 0;
     }
 
     printf("[Exit  ] Car %d [%s] from %s side. Remaining cars on road: LEFT=%d, RIGHT=%d\n",
@@ -1078,18 +1100,23 @@ gboolean update_gui(gpointer data) {
     return simulation_running;
 }
 
+void spawn_new(SpawnCarsParams * params) {
+    Car* c = malloc(sizeof(Car));
+    c->id = ++(*params->id);
+    c->dir = params->dir;
+    c->type = params->type;
+    if (c->dir == LEFT) {
+        remaining_left++;
+    }else {
+        remaining_right++;
+    }
+    CEthread_t tid;
+    CEthread_create(&tid, NULL, car_thread, c);
+}
+
 GCallback spawn_cars(GtkWidget *widget, GdkEventButton event, gpointer * data) {
     SpawnCarsParams *params = (SpawnCarsParams*) data;
-    for (int i = 0; i < params->count; ++i) {
-        Car* c = malloc(sizeof(Car));
-        c->id = ++(*params->id);
-        c->dir = params->dir;
-        c->type = params->type;
-
-        CEthread_t tid;
-        CEthread_create(&tid, NULL, car_thread, c);
-        // CEThreads doesn't have detach, threads are automatically cleaned up when done
-    }
+    spawn_new(params);
 }
 
 
@@ -1114,31 +1141,44 @@ gboolean on_draw(GtkWidget* widget, cairo_t* cr, gpointer data) {
 
 
     // Draw labels for queues
-    //set_cairo_color(cr, 0, 0, 0, 255);  // Black text
-    //cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-    //cairo_set_font_size(cr, 16);
+    set_cairo_color(cr, 0, 0, 0, 255);  // Black text
+    cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+    cairo_set_font_size(cr, 16);
 
-    //cairo_move_to(cr, 50, 80);
-    //cairo_show_text(cr, "Left Queue");
+    cairo_move_to(cr, 50, 80);
+    cairo_show_text(cr, "Left:");
 
-    //cairo_move_to(cr, WINDOW_WIDTH - 50 - 100, 80);
-   // cairo_show_text(cr, "Right Queue");
+    cairo_move_to(cr, 50, 95);
+    char textLeft [2];
+    sprintf(textLeft, "%d", remaining_left);
+    cairo_show_text(cr, textLeft);
+
+
+    cairo_move_to(cr, WINDOW_WIDTH - 150, 80);
+    cairo_show_text(cr, "Right:");
+    cairo_move_to(cr, WINDOW_WIDTH - 150, 95);
+    char textRight [2];
+    sprintf(textRight, "%d", remaining_right);
+    cairo_show_text(cr, textRight);
 
     return FALSE;
 }
 
 GCallback startRunningSimulation() {
-    printf("Starting Simulation\n");
-    // Create a thread for simulation
-    CEthread_t simulation_thread;
-    CEthread_create(&simulation_thread, NULL, simulation_main, NULL);
 
-    // Mark simulation as complete
-    simulation_running = FALSE;
+    if (remaining_left + remaining_right > 0) {
+        // Create a thread for simulation
+        start_drawing_cars = 1;
+        pthread_t simulation_thread;
+        pthread_create(&simulation_thread, NULL, simulation_main, NULL);
 
-    // Wait for simulation thread to complete
-    CEthread_join(simulation_thread, NULL);
-    printf("Simulation stopped\n");
+        // Mark simulation as complete
+        simulation_running = TRUE;
+
+        // Wait for simulation thread to complete
+        pthread_detach(simulation_thread);
+        //CEthread_join(simulation_thread, NULL);
+    }
 }
 
 GCallback change_car_type(GtkWidget *widget, GdkEventButton event, gpointer * data) {
@@ -1154,7 +1194,7 @@ GCallback change_car_type(GtkWidget *widget, GdkEventButton event, gpointer * da
     }
 }
 
-void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, SpawnCarsParams * paramsRight, CarDraw * car_drawn ) {
+void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, SpawnCarsParams * paramsRight) {
     gtk_init(argc, argv);
 
     // Create main window
@@ -1238,9 +1278,7 @@ void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, S
 void* simulation_main(void* arg) {
     // Initialize synchronization and state
 
-
-
-
+    printf("Starting Simulation\n");
     // Wait until all cars have crosseds
     while ((remaining_left > 0 || remaining_right > 0) && simulation_running) {
         usleep(100000); // Sleep 100ms to avoid busy waiting
@@ -1251,8 +1289,26 @@ void* simulation_main(void* arg) {
     CEmutex_destroy(&road_mutex);
     CEcond_destroy(&road_cond);
     CEmutex_destroy(&queue_mutex);
+    printf("Simulation stopped\n");
 
     return NULL;
+}
+
+void spawnInitialCars(Direction dir, int id,int norm, int sp, int em) {
+    const CarType typeList [3] = {NORMAL, SPORT, EMERGENCY};
+    const int carAmounts [3] = {norm, sp, em};
+    SpawnCarsParams * newCar = malloc(sizeof(SpawnCarsParams));;
+    newCar->dir = dir;
+
+    printf("Here 0");
+    for (int i = 0; i < 3; i++) {
+        newCar->type = typeList[i];
+        newCar->id = &id;
+        for (int j = 0; j < carAmounts[i]; j++) {
+            spawn_new(newCar);
+        }
+    }
+    free(newCar);
 }
 
 
@@ -1303,8 +1359,13 @@ int main(int argc, char* argv[]) {
     CEcond_init(&road_cond, NULL);
     CEmutex_init(&queue_mutex, NULL);
 
-    remaining_left  = normales_left + deportivos_left + emergencia_left;
-    remaining_right = normales_right + deportivos_right + emergencia_right;
+    int id = 0;
+    spawnInitialCars(LEFT, id, normales_left,deportivos_left,emergencia_left);
+    spawnInitialCars(RIGHT, id, normales_right, deportivos_right, emergencia_right);
+
+
+    printf("Remaining L: %d Reamining R: %d \n", remaining_left, remaining_right);
+
     cars_in_window  = 0;
     current_dir     = LEFT;
 
@@ -1314,15 +1375,18 @@ int main(int argc, char* argv[]) {
         CEthread_create(&tidSignal, NULL, signal_thread, NULL);
     }
     // Initialize GUI
-    int id = 0;
+
+    simulation_running = TRUE;
 
     SpawnCarsParams * paramsLeft = malloc(sizeof(SpawnCarsParams));
     SpawnCarsParams * paramsRight = malloc(sizeof(SpawnCarsParams));
-    CarDraw * car_drawn = malloc(sizeof(CarDraw));
-    init_gui(&argc, &argv, &id, paramsLeft, paramsRight, car_drawn);
+    car_drawn = malloc(sizeof(CarDraw));
+
+    init_gui(&argc, &argv, &id, paramsLeft, paramsRight);
 
 
     // Start the GTK main loop
+
     gtk_main();
 
     free(car_drawn);
