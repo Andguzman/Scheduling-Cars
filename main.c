@@ -601,9 +601,8 @@ void enqueue_car(CarQueue* queue, Car* car) {
 
 GCallback paint_car(GtkWidget* widget, cairo_t *cr, gpointer data) {
     if (start_drawing_cars == 1) {
-        CarDraw * car_draw = (CarDraw*)data;
-        int xPos = car_draw->x;
-        int speed = 2;
+        const CarDraw * car_draw = (CarDraw*)data;
+        const int xPos = car_draw->x;
         int laneAdjust = 0;
         if (car_draw->dir == LEFT) {
             laneAdjust = 53;
@@ -636,7 +635,6 @@ GCallback paint_car(GtkWidget* widget, cairo_t *cr, gpointer data) {
             set_cairo_color(cr, 0, 0, 0, 255);
             cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+31+laneAdjust, 50, 5);
             cairo_fill(cr);
-            speed = 4;
         }else {
             set_cairo_color(cr, 255, 255, 255, 255);
             cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, 50, ROAD_HEIGHT/2-20);
@@ -648,28 +646,13 @@ GCallback paint_car(GtkWidget* widget, cairo_t *cr, gpointer data) {
             set_cairo_color(cr, 255, 0, 0, 255);
             cairo_rectangle(cr, ROAD_X+15+directionOffset, ROAD_Y+20+laneAdjust, 5, 9);
             cairo_fill(cr);
-            speed = 6;
-        }
-
-        if (car_draw->dir == LEFT) {
-            xPos += speed;
-            if (xPos <= ROAD_WIDTH - 60) {
-                car_draw->x = xPos;
-            }else {
-                car_draw->x = 0;
-            }
-        }else{
-           xPos -= speed;
-            if (xPos <= 10) {
-                car_draw->x = ROAD_WIDTH - 60;
-            }else {
-                car_draw->x = xPos;
-            }
         }
     }
-
-
     return FALSE;
+}
+
+double getElapsedTime(clock_t start, clock_t end) {
+    return ((double)(end - start)) / CLOCKS_PER_SEC;
 }
 
 void* car_thread(void* arg) {
@@ -988,7 +971,7 @@ void* car_thread(void* arg) {
     // For visualization - update position incrementally
     struct timespec start_time;
     clock_gettime(CLOCK_REALTIME, &start_time);
-    long travel_time_seconds = travel_time_us / 1000000L;
+    double travel_time_seconds = travel_time_us / 1000000L;
     clock_t begin_time = clock();
     // For Round Robin, check if time slice expires during travel
     if (current_scheduler == RR && car->type != EMERGENCY) {
@@ -1009,16 +992,31 @@ void* car_thread(void* arg) {
         }
     } else {
         // Regular crossing for other schedulers
-        //CarDraw * car_drawn = malloc(sizeof(CarDraw));
-        //car_drawn->x = 0;
-        //car_drawn->type = car->type;
-        //car_drawn->dir = car->type;
-        while (((double)(clock() - begin_time)) / CLOCKS_PER_SEC < travel_time_seconds) {
-            //g_signal_connect(drawing_area, "draw", G_CALLBACK(paint_car), car_drawn);
+
+        car_drawn->type = car->type;
+        car_drawn->dir = car->dir;
+        if (car_drawn->dir == LEFT) {
+            car_drawn->x = 10;
+        }else{
+            car_drawn->x = ROAD_WIDTH-60;
+        }
+        double time_elapsed = getElapsedTime(begin_time, clock());
+        double advanceTime = travel_time_seconds/(double)(ROAD_WIDTH-70);
+        printf("Advance time: %lf\n", travel_time_seconds);
+        clock_t lastRefresh = clock();
+
+        while (time_elapsed < travel_time_seconds) {
+            if (getElapsedTime(lastRefresh, clock()) >= advanceTime) {
+                if (car_drawn->dir == LEFT) {
+                    car_drawn->x +=1;
+                }else {
+                    car_drawn->x -=1;
+                }
+                lastRefresh = clock();
+            }
+            time_elapsed = getElapsedTime(begin_time, clock());
         }
 
-        //free(car_drawn);
-        //usleep(travel_time_us);
     }
 
 
@@ -1213,9 +1211,6 @@ void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, S
     gtk_widget_set_size_request(drawing_area, WINDOW_WIDTH - 20, WINDOW_HEIGHT - 20);
     g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(on_draw), NULL);
 
-    car_drawn->dir = LEFT;
-    car_drawn->type = EMERGENCY;
-    car_drawn->x = 0;
     g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(paint_car), car_drawn);
     gtk_box_pack_start(GTK_BOX(vbox), drawing_area, TRUE, TRUE, 0);
     // Add control buttons
