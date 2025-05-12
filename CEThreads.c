@@ -433,19 +433,16 @@ int CEmutex_destroy(CEmutex_t *mutex) {
 int CEmutex_lock(CEmutex_t *mutex) {
     if (!mutex) return EINVAL;
     if (!current_thread) return EINVAL;
-
     // Fast path: if mutex is unlocked, acquire it
     if (!mutex->locked) {
         mutex->locked = 1;
         mutex->owner = current_thread->id;
         return 0;
     }
-
     // Check for deadlock if we already own the mutex
     if (mutex->owner == current_thread->id) {
         return EDEADLK;
     }
-
     // Slow path: mutex is locked, wait for it
     current_thread->state = CE_THREAD_BLOCKED;
 
@@ -467,14 +464,12 @@ int CEmutex_lock(CEmutex_t *mutex) {
     // When we return here, we should have the mutex
     mutex->locked = 1;
     mutex->owner = current_thread->id;
-
     return 0;
 }
 
 int CEmutex_unlock(CEmutex_t *mutex) {
     if (!mutex) return EINVAL;
     if (!current_thread) return EINVAL;
-
     // Check if mutex is locked
     if (!mutex->locked) {
         return EPERM;

@@ -50,6 +50,13 @@ typedef struct {
 typedef struct {
     Direction dir;
     CarType type;
+    int x;
+    int y;
+} CarDraw;
+
+typedef struct {
+    Direction dir;
+    CarType type;
     int count;  // Replace with actual type
     int * id;
 } SpawnCarsParams;
@@ -181,6 +188,8 @@ int default_priority = 5;           // Default priority level (1-10)
 int default_estimated_time = 5;     // Default estimated time (seconds)
 int time_slice_remaining = 0;       // Time slice remaining for current car in RR
 
+
+GtkWidget* drawing_area;
 // Get next car from queue
 Car* dequeue_car(CarQueue* queue) {
     CEmutex_lock(&queue_mutex);  // Replace pthread_mutex_lock
@@ -583,6 +592,77 @@ void enqueue_car(CarQueue* queue, Car* car) {
     CEmutex_unlock(&queue_mutex);  // Replace pthread_mutex_unlock
 }
 
+GCallback paint_car(GtkWidget* widget, cairo_t *cr, gpointer data) {
+    CarDraw * car_draw = (CarDraw*)data;
+    int xPos = car_draw->x;
+    int speed = 2;
+    int laneAdjust = 0;
+    if (car_draw->dir == LEFT) {
+        laneAdjust = 53;
+    }
+
+    if (car_draw->type == NORMAL) {
+        set_cairo_color(cr, 102, 178, 255, 255);//Cuerpo del cuarto
+        cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, 50, ROAD_HEIGHT/2-20);
+        cairo_fill(cr);
+        int directionOffset = xPos;
+        if (car_draw->dir == LEFT) {
+            directionOffset += 45;
+        }
+        set_cairo_color(cr, 255, 255, 0, 255);//Luces
+        cairo_rectangle(cr, ROAD_X+10+directionOffset, ROAD_Y+14+laneAdjust, 5, 5);
+        cairo_fill(cr);
+
+        cairo_rectangle(cr, ROAD_X+10+directionOffset, ROAD_Y+31+laneAdjust, 5, 5);
+        cairo_fill(cr);
+    }
+    else if (car_draw->type == SPORT) {
+        set_cairo_color(cr, 255, 128, 0, 255);//Cuerpo del carro
+        cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, 50, ROAD_HEIGHT/2-20);
+        cairo_fill(cr);
+
+        set_cairo_color(cr, 0, 0, 0, 255);//Detalles
+        cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+14+laneAdjust, 50, 5);
+        cairo_fill(cr);
+
+        set_cairo_color(cr, 0, 0, 0, 255);
+        cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+31+laneAdjust, 50, 5);
+        cairo_fill(cr);
+        speed = 4;
+    }else {
+        set_cairo_color(cr, 255, 255, 255, 255);
+        cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, 50, ROAD_HEIGHT/2-20);
+        cairo_fill(cr);
+        int directionOffset = xPos;
+        if (car_draw->dir == LEFT) {
+            directionOffset += 32;
+        }
+        set_cairo_color(cr, 255, 0, 0, 255);
+        cairo_rectangle(cr, ROAD_X+15+directionOffset, ROAD_Y+20+laneAdjust, 5, 9);
+        cairo_fill(cr);
+        speed = 6;
+    }
+
+    if (car_draw->dir == LEFT) {
+        xPos += speed;
+        if (xPos <= ROAD_WIDTH - 60) {
+            car_draw->x = xPos;
+        }else {
+            car_draw->x = 0;
+        }
+    }else{
+       xPos -= speed;
+        if (xPos <= 10) {
+            car_draw->x = ROAD_WIDTH - 60;
+        }else {
+            car_draw->x = xPos;
+        }
+    }
+
+
+    return FALSE;
+}
+
 void* car_thread(void* arg) {
     Car* car = (Car*)arg;
     //printf("Here car %d\n", car->id);
@@ -621,20 +701,254 @@ void* car_thread(void* arg) {
         car->id,
         type_name(car->type),
         car->dir == LEFT ? "LEFT" : "RIGHT");
-
     // Add car to appropriate queue
     if (car->dir == LEFT) {
         enqueue_car(&left_queue, car);
     } else {
         enqueue_car(&right_queue, car);
     }
-
     CEmutex_lock(&road_mutex);
 
-    // ... [Rest of waiting logic unchanged] ...
+    // Special handling for Round Robin
+    if (current_scheduler == RR && car->type != EMERGENCY) {
+        // Use current time_slice_remaining for RR scheduling
+        // But this doesn't apply to emergency vehicles - they still get priority
+        while (1) {
+            // Check if car is at front of its queue
+            CEmutex_lock(&queue_mutex);
+            int is_front = (car->dir == LEFT) ?
+                (left_queue.head && left_queue.head->car->id == car->id) :
+                (right_queue.head && right_queue.head->car->id == car->id);
+            CEmutex_unlock(&queue_mutex);
 
-    // IMPORTANT: Update road occupation BEFORE the car enters the road
+            // CRITICAL CHANGE: This is where we check if the car can enter the road
+            // We must ensure no cars from opposite direction are on the road
+            if (is_front && can_enter_road(car)) {
+                // Car can enter the road
+                if (car->dir == LEFT) {
+                    Car* next_car = dequeue_car(&left_queue);
+                    if (next_car->id != car->id) {
+                        printf("ERROR: Queue mismatch for car %d!\n", car->id);
+                    }
+                } else {
+                    Car* next_car = dequeue_car(&right_queue);
+                    if (next_car->id != car->id) {
+                        printf("ERROR: Queue mismatch for car %d!\n", car->id);
+                    }
+                }
+                break;
+            }
+
+            // Check if any emergency vehicle is approaching deadline
+            int emergency_pending = check_emergency_deadlines(&left_queue) ||
+                                   check_emergency_deadlines(&right_queue);
+
+            if (emergency_pending) {
+                CEcond_wait(&road_cond, &road_mutex);
+                continue;
+            }
+
+            // Wait with timeout
+            struct timespec wait_time = {
+                .tv_sec = 0,
+                .tv_nsec = 100000000 // 100ms
+            };
+            CEcond_timedwait(&road_cond, &road_mutex, &wait_time);
+        }
+    }
+    // Emergency vehicle handling with strict deadline enforcement
+    else if (car->type == EMERGENCY) {
+        while (1) {
+            // Check if deadline is approaching
+            int remaining = time_to_deadline(car->arrival_time);
+
+            // CRITICAL CHANGE: Even emergency vehicles must respect opposite direction traffic
+            // unless their deadline is imminent
+            if (remaining <= 1) {
+                printf("[EMERGENCY OVERRIDE] Car %d forcing entry with %d seconds remaining to deadline\n",
+                       car->id, remaining);
+
+                if (car->dir == LEFT) {
+                    Car* next_car = dequeue_car(&left_queue);
+                    if (next_car->id != car->id) {
+                        printf("ERROR: Queue mismatch for car %d!\n", car->id);
+                    }
+                } else {
+                    Car* next_car = dequeue_car(&right_queue);
+                    if (next_car->id != car->id) {
+                        printf("ERROR: Queue mismatch for car %d!\n", car->id);
+                    }
+                }
+                break;
+            }
+            // If emergency vehicle can enter and road is clear in opposite direction, proceed
+            else if (can_enter_road(car)) {
+                if (car->dir == LEFT) {
+                    Car* next_car = dequeue_car(&left_queue);
+                    if (next_car->id != car->id) {
+                        printf("ERROR: Queue mismatch for car %d!\n", car->id);
+                    }
+                } else {
+                    Car* next_car = dequeue_car(&right_queue);
+                    if (next_car->id != car->id) {
+                        printf("ERROR: Queue mismatch for car %d!\n", car->id);
+                    }
+                }
+                break;
+            }
+
+            // Wait with timeout for road to become available
+            struct timespec wait_time = {
+                .tv_sec = 0,
+                .tv_nsec = 100000000 // 100ms
+            };
+            CEcond_timedwait(&road_cond, &road_mutex, &wait_time);
+        }
+    }
+    // For priority-based schedulers (Priority, SJF, REALTIME) and FCFS
+    else {
+        // Regular car waiting logic based on flow control method
+        if (strcmp(flow_method, "FIFO") == 0) {
+            // FIFO: Wait until car is at front of its queue AND can enter road
+            while (1) {
+                CEmutex_lock(&queue_mutex);
+                int is_front = (car->dir == LEFT) ?
+                    (left_queue.head && left_queue.head->car->id == car->id) :
+                    (right_queue.head && right_queue.head->car->id == car->id);
+                CEmutex_unlock(&queue_mutex);
+
+                // CRITICAL CHANGE: Enforce can_enter_road check
+                if (is_front && can_enter_road(car)) {
+                    // Remove car from queue when it enters
+                    if (car->dir == LEFT) {
+                        Car* next_car = dequeue_car(&left_queue);
+                        if (next_car->id != car->id) {
+                            printf("ERROR: Queue mismatch for car %d!\n", car->id);
+                        }
+                    } else {
+                        Car* next_car = dequeue_car(&right_queue);
+                        if (next_car->id != car->id) {
+                            printf("ERROR: Queue mismatch for car %d!\n", car->id);
+                        }
+                    }
+                    break;
+                }
+
+                // Check if any emergency vehicle is approaching deadline
+                int emergency_pending = check_emergency_deadlines(&left_queue) ||
+                                       check_emergency_deadlines(&right_queue);
+
+                // If there's an emergency vehicle approaching deadline, yield and wait
+                if (emergency_pending) {
+                    CEcond_wait(&road_cond, &road_mutex);
+                    continue;
+                }
+
+                // Wait with timeout
+                struct timespec wait_time = {
+                    .tv_sec = 0,
+                    .tv_nsec = 100000000 // 100ms
+                };
+                CEcond_timedwait(&road_cond, &road_mutex, &wait_time);
+            }
+        }
+        else if (strcmp(flow_method, "EQUITY") == 0) {
+            // EQUITY: Wait until car's direction is allowed and it's within the window
+            while (1) {
+                CEmutex_lock(&queue_mutex);
+                int is_front = (car->dir == LEFT) ?
+                    (left_queue.head && left_queue.head->car->id == car->id) :
+                    (right_queue.head && right_queue.head->car->id == car->id);
+                CEmutex_unlock(&queue_mutex);
+
+                int can_go = (car->dir == current_dir && cars_in_window < W && is_front) ||
+                            (current_dir == LEFT && remaining_left == 0 && car->dir == RIGHT && is_front) ||
+                            (current_dir == RIGHT && remaining_right == 0 && car->dir == LEFT && is_front);
+
+                // CRITICAL CHANGE: Add can_enter_road check
+                if (can_go && can_enter_road(car)) {
+                    // Remove car from queue when it enters
+                    if (car->dir == LEFT) {
+                        Car* next_car = dequeue_car(&left_queue);
+                        if (next_car->id != car->id) {
+                            printf("ERROR: Queue mismatch for car %d!\n", car->id);
+                        }
+                    } else {
+                        Car* next_car = dequeue_car(&right_queue);
+                        if (next_car->id != car->id) {
+                            printf("ERROR: Queue mismatch for car %d!\n", car->id);
+                        }
+                    }
+                    break;
+                }
+
+                // Check if any emergency vehicle is approaching deadline
+                int emergency_pending = check_emergency_deadlines(&left_queue) ||
+                                       check_emergency_deadlines(&right_queue);
+
+                // If there's an emergency vehicle approaching deadline, yield and wait
+                if (emergency_pending) {
+                    CEcond_wait(&road_cond, &road_mutex);
+                    continue;
+                }
+
+                // Wait with timeout
+                struct timespec wait_time = {
+                    .tv_sec = 0,
+                    .tv_nsec = 100000000 // 100ms
+                };
+                CEcond_timedwait(&road_cond, &road_mutex, &wait_time);
+            }
+        }
+        else if (strcmp(flow_method, "SIGNAL") == 0) {
+            // SIGNAL: Wait until car's direction is allowed
+            while (1) {
+                CEmutex_lock(&queue_mutex);
+                int is_front = (car->dir == LEFT) ?
+                    (left_queue.head && left_queue.head->car->id == car->id) :
+                    (right_queue.head && right_queue.head->car->id == car->id);
+                CEmutex_unlock(&queue_mutex);
+
+                // CRITICAL CHANGE: Add can_enter_road check
+                if (car->dir == current_dir && is_front && can_enter_road(car)) {
+                    // Remove car from queue when it enters
+                    if (car->dir == LEFT) {
+                        Car* next_car = dequeue_car(&left_queue);
+                        if (next_car->id != car->id) {
+                            printf("ERROR: Queue mismatch for car %d!\n", car->id);
+                        }
+                    } else {
+                        Car* next_car = dequeue_car(&right_queue);
+                        if (next_car->id != car->id) {
+                            printf("ERROR: Queue mismatch for car %d!\n", car->id);
+                        }
+                    }
+                    break;
+                }
+
+                // Check if any emergency vehicle is approaching deadline
+                int emergency_pending = check_emergency_deadlines(&left_queue) ||
+                                       check_emergency_deadlines(&right_queue);
+
+                // If there's an emergency vehicle approaching deadline, yield and wait
+                if (emergency_pending) {
+                    CEcond_wait(&road_cond, &road_mutex);
+                    continue;
+                }
+
+                // Wait with timeout
+                struct timespec wait_time = {
+                    .tv_sec = 0,
+                    .tv_nsec = 100000000 // 100ms
+                };
+                CEcond_timedwait(&road_cond, &road_mutex, &wait_time);
+            }
+        }
+    }
+
+
     cars_on_road++;
+
     if (car->dir == LEFT) {
         cars_on_road_left++;
     } else {
@@ -646,6 +960,7 @@ void* car_thread(void* arg) {
     //add_car_visual(car->id, car->dir, car->type);
 
     // Actual crossing
+    //g_signal_connect(drawing_area, "draw", G_CALLBACK(paint_car), NULL);
     printf("[Enter ] Car %d [%s] from %s side (Scheduler: %s). Total cars on road: LEFT=%d, RIGHT=%d\n",
            car->id, type_name(car->type),
            car->dir == LEFT ? "LEFT" : "RIGHT", scheduler_method,
@@ -663,29 +978,37 @@ void* car_thread(void* arg) {
     // For visualization - update position incrementally
     struct timespec start_time;
     clock_gettime(CLOCK_REALTIME, &start_time);
+    long travel_time_seconds = travel_time_us / 1000000L;
+    clock_t begin_time = clock();
+    // For Round Robin, check if time slice expires during travel
+    if (current_scheduler == RR && car->type != EMERGENCY) {
+        // Calculate how long the car will take to cross
 
-    // For Round Robin or regular travel
-    double progress = 0.0;
-    while (progress < 1.0) {
-        struct timespec current_time;
-        clock_gettime(CLOCK_REALTIME, &current_time);
 
-        double elapsed = (current_time.tv_sec - start_time.tv_sec) +
-                        (current_time.tv_nsec - start_time.tv_nsec) / 1000000000.0;
+        // Check if car will complete crossing within time slice
+        if (travel_time_seconds <= time_slice_remaining) {
+            // Car completes crossing within time slice
+            usleep(travel_time_us);
+        } else {
+            // Car's time slice expires during crossing
+            // Let it continue anyway since it's already on the road
+            // But record that it exceeded its time slice
+            printf("[RR] Car %d exceeded time slice but continuing to cross.\n", car->id);
+            usleep(travel_time_us);
+            rr_timeout = 1;
+        }
+    } else {
+        // Regular crossing for other schedulers
 
-        progress = elapsed / (travel_time_us / 1000000.0);
-        if (progress > 1.0) progress = 1.0;
-
-        // Update car position for visualization
-        update_car_visual(car->id, progress);
-
-        // Small sleep to avoid CPU hogging
-        usleep(50000); // 50ms
+        while (((double)(clock() - begin_time)) / CLOCKS_PER_SEC < travel_time_seconds) {
+            //g_signal_connect(drawing_area, "draw", G_CALLBACK(paint_car), NULL);
+        }
+        //usleep(travel_time_us);
     }
+
 
     // Update state after crossing
     CEmutex_lock(&road_mutex);
-
     // Update road occupation
     cars_on_road--;
     if (car->dir == LEFT) {
@@ -701,7 +1024,44 @@ void* car_thread(void* arg) {
            car->dir == LEFT ? "LEFT" : "RIGHT",
            cars_on_road_left, cars_on_road_right);
 
-    // ... [Rest of exit logic unchanged] ...
+    // Update flow control state
+    if (strcmp(flow_method, "EQUITY") == 0) {
+        cars_in_window++;
+
+        if (cars_in_window >= W ||
+            (current_dir == LEFT && remaining_left == 0) ||
+            (current_dir == RIGHT && remaining_right == 0)) {
+            cars_in_window = 0;
+            current_dir = (current_dir == LEFT) ? RIGHT : LEFT;
+            printf("[EQUITY] Changing direction to: %s\n",
+                   current_dir == LEFT ? "LEFT" : "RIGHT");
+            }
+    }
+
+    // For Round Robin, if car timed out during crossing, put it back in queue
+    if (current_scheduler == RR && car->type != EMERGENCY && rr_timeout) {
+        printf("[RR] Car %d being requeued after time slice expiration.\n", car->id);
+        // Create a new car instance since this one will be freed
+        Car* new_car = malloc(sizeof(Car));
+        *new_car = *car;  // Copy all fields
+
+        // Put back in appropriate queue
+        if (car->dir == LEFT) {
+            requeue_car(&left_queue, new_car);
+        } else {
+            requeue_car(&right_queue, new_car);
+        }
+    }
+
+    // Notify waiting cars
+    CEcond_broadcast(&road_cond);
+    CEmutex_unlock(&road_mutex);
+
+    // Free car structure - only if not requeued
+    if (!(current_scheduler == RR && car->type != EMERGENCY && rr_timeout)) {
+        free(car);
+    }
+
 
     return NULL;
 }
@@ -731,6 +1091,8 @@ GCallback spawn_cars(GtkWidget *widget, GdkEventButton event, gpointer * data) {
         // CEThreads doesn't have detach, threads are automatically cleaned up when done
     }
 }
+
+
 
 // Drawing function for the GTK drawing area
 gboolean on_draw(GtkWidget* widget, cairo_t* cr, gpointer data) {
@@ -792,7 +1154,7 @@ GCallback change_car_type(GtkWidget *widget, GdkEventButton event, gpointer * da
     }
 }
 
-void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, SpawnCarsParams * paramsRight) {
+void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, SpawnCarsParams * paramsRight, CarDraw * car_drawn ) {
     gtk_init(argc, argv);
 
     // Create main window
@@ -807,9 +1169,14 @@ void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, S
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
     // Create drawing area
-    GtkWidget* drawing_area = gtk_drawing_area_new();
+    drawing_area = gtk_drawing_area_new();
     gtk_widget_set_size_request(drawing_area, WINDOW_WIDTH - 20, WINDOW_HEIGHT - 20);
     g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(on_draw), NULL);
+
+    car_drawn->dir = LEFT;
+    car_drawn->type = EMERGENCY;
+    car_drawn->x = 0;
+    g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(paint_car), car_drawn);
     gtk_box_pack_start(GTK_BOX(vbox), drawing_area, TRUE, TRUE, 0);
     // Add control buttons
     GtkWidget* hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
@@ -820,7 +1187,7 @@ void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, S
     paramsLeft->dir = LEFT;
     paramsLeft->id = id;
     paramsLeft->count = normales_left;
-    paramsLeft->type = NORMAL;
+    paramsLeft->type = SPORT;
     g_signal_connect(spawn_left_button, "clicked", G_CALLBACK(spawn_cars), paramsLeft);
     gtk_box_pack_start(GTK_BOX(hbox), spawn_left_button, FALSE, FALSE, 0);
 
@@ -859,6 +1226,8 @@ void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, S
     // Show all widgets
     gtk_widget_show_all(window);
 
+
+
     // Start timer for regular updates (60 FPS)
     g_timeout_add(16, update_gui, drawing_area);
 }
@@ -868,35 +1237,15 @@ void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, S
 // Simulation thread function
 void* simulation_main(void* arg) {
     // Initialize synchronization and state
-    CEmutex_init(&road_mutex, NULL);
-    CEcond_init(&road_cond, NULL);
-    CEmutex_init(&queue_mutex, NULL);
 
-    remaining_left  = normales_left + deportivos_left + emergencia_left;
-    remaining_right = normales_right + deportivos_right + emergencia_right;
-    cars_in_window  = 0;
-    current_dir     = LEFT;
 
-    // Launch signal thread if needed
-    CEthread_t tidSignal;
-    if (!strcmp(flow_method, "SIGNAL")) {
-        CEthread_create(&tidSignal, NULL, signal_thread, NULL);
-    }
-/*
-    // Create cars
-    int id = 0;
 
-    spawn_cars(LEFT, NORMAL, normales_left, &id);
-    spawn_cars(LEFT, SPORT, deportivos_left, &id);
-    spawn_cars(LEFT, EMERGENCY, emergencia_left, &id);
-    spawn_cars(RIGHT, NORMAL, normales_right, &id);
-    spawn_cars(RIGHT, SPORT, deportivos_right, &id);
-    spawn_cars(RIGHT, EMERGENCY, emergencia_right, &id);
-*/
-    // Wait until all cars have crossed
+
+    // Wait until all cars have crosseds
     while ((remaining_left > 0 || remaining_right > 0) && simulation_running) {
         usleep(100000); // Sleep 100ms to avoid busy waiting
         CEthread_yield(); // Add yield to give other threads a chance to run
+
     }
 
     CEmutex_destroy(&road_mutex);
@@ -950,17 +1299,33 @@ int main(int argc, char* argv[]) {
     fclose(fp);
     // ... (rest of configuration and initialization unchanged)
     read_scheduler_config();
+    CEmutex_init(&road_mutex, NULL);
+    CEcond_init(&road_cond, NULL);
+    CEmutex_init(&queue_mutex, NULL);
+
+    remaining_left  = normales_left + deportivos_left + emergencia_left;
+    remaining_right = normales_right + deportivos_right + emergencia_right;
+    cars_in_window  = 0;
+    current_dir     = LEFT;
+
+    // Launch signal thread if needed
+    CEthread_t tidSignal;
+    if (!strcmp(flow_method, "SIGNAL")) {
+        CEthread_create(&tidSignal, NULL, signal_thread, NULL);
+    }
     // Initialize GUI
     int id = 0;
 
     SpawnCarsParams * paramsLeft = malloc(sizeof(SpawnCarsParams));
     SpawnCarsParams * paramsRight = malloc(sizeof(SpawnCarsParams));
-    init_gui(&argc, &argv, &id, paramsLeft, paramsRight);
+    CarDraw * car_drawn = malloc(sizeof(CarDraw));
+    init_gui(&argc, &argv, &id, paramsLeft, paramsRight, car_drawn);
 
 
     // Start the GTK main loop
     gtk_main();
 
+    free(car_drawn);
     free(paramsLeft);
     free(paramsRight);
     // Cleanup
@@ -976,124 +1341,4 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-/*MAIN WITH PRINTS
- *
- *int main() {
-    printf("Road Crossing Simulation \n");
-
-
-    // Initialize the CEThreads library
-    CEthread_lib_init();
-
-    // Initialize queues
-    init_queue(&left_queue);
-    init_queue(&right_queue);
-
-    // Read config
-    FILE* fp = fopen("config.txt", "r");
-    if (!fp) {
-        // Create a default config if file doesn't exist
-        fp = fopen("config.txt", "w");
-        if (!fp) {
-            perror("Failed to create config.txt");
-            return 1;
-        }
-
-        fprintf(fp, "flow_method=EQUITY\n");
-        fprintf(fp, "road_length=50\n");
-        fprintf(fp, "car_speed=10\n");
-        fprintf(fp, "num_left=5\n");
-        fprintf(fp, "num_right=5\n");
-        fprintf(fp, "W=3\n");
-        fprintf(fp, "signal_time=5\n");
-        fprintf(fp, "max_wait_emergency=3\n");
-        fprintf(fp, "normales_left=2\n");
-        fprintf(fp, "deportivos_left=2\n");
-        fprintf(fp, "emergencia_left=1\n");
-        fprintf(fp, "normales_right=2\n");
-        fprintf(fp, "deportivos_right=2\n");
-        fprintf(fp, "emergencia_right=1\n");
-
-        fclose(fp);
-        fp = fopen("config.txt", "r");
-        if (!fp) {
-            perror("Failed to open config.txt");
-            return 1;
-        }
-    }
-
-    char key[32], val[32];
-    while (fscanf(fp, "%31[^=]=%31s\n", key, val) == 2) {
-        if      (!strcmp(key, "flow_method"))      strcpy(flow_method, val);
-        else if (!strcmp(key, "road_length"))      road_length = atoi(val);
-        else if (!strcmp(key, "car_speed"))        base_speed = atoi(val);
-        else if (!strcmp(key, "num_left"))         num_left = atoi(val);
-        else if (!strcmp(key, "num_right"))        num_right = atoi(val);
-        else if (!strcmp(key, "W"))                W = atoi(val);
-        else if (!strcmp(key, "signal_time"))      signal_time = atoi(val);
-        else if (!strcmp(key, "max_wait_emergency")) max_wait_emergency = atoi(val);
-        else if (!strcmp(key, "normales_left"))    normales_left = atoi(val);
-        else if (!strcmp(key, "deportivos_left"))  deportivos_left = atoi(val);
-        else if (!strcmp(key, "emergencia_left"))  emergencia_left = atoi(val);
-        else if (!strcmp(key, "normales_right"))   normales_right = atoi(val);
-        else if (!strcmp(key, "deportivos_right")) deportivos_right = atoi(val);
-        else if (!strcmp(key, "emergencia_right")) emergencia_right = atoi(val);
-    }
-    fclose(fp);
-
-    // Read scheduler configuration
-    read_scheduler_config();
-
-    printf("Configuration loaded:\n");
-    printf("- Flow method: %s\n", flow_method);
-    printf("- Road length: %d\n",  road_length);
-    printf("- Base speed: %d\n", base_speed);
-    printf("- Max wait for emergency vehicles: %d seconds\n", max_wait_emergency);
-    printf("- Scheduler method: %s\n", scheduler_method);
-
-    // Initialize synchronization and state
-    CEmutex_init(&road_mutex, NULL);
-    CEcond_init(&road_cond, NULL);
-    CEmutex_init(&queue_mutex, NULL);
-
-    remaining_left  = normales_left + deportivos_left + emergencia_left;
-    remaining_right = normales_right + deportivos_right + emergencia_right;
-    cars_in_window  = 0;
-    current_dir     = LEFT;
-
-    // Launch signal thread if needed
-    CEthread_t tidSignal;
-    if (!strcmp(flow_method, "SIGNAL")) {
-        CEthread_create(&tidSignal, NULL, signal_thread, NULL);
-        // CEThreads doesn't have detach, threads are automatically cleaned up when done
-    }
-
-    // Create cars
-    int id = 0;
-
-    spawn_cars(LEFT, NORMAL, normales_left, &id);
-    spawn_cars(LEFT, SPORT, deportivos_left, &id);
-    spawn_cars(LEFT, EMERGENCY, emergencia_left, &id);
-    spawn_cars(RIGHT, NORMAL, normales_right, &id);
-    spawn_cars(RIGHT, SPORT, deportivos_right, &id);
-    spawn_cars(RIGHT, EMERGENCY, emergencia_right, &id);
-
-    // Wait until all cars have crossed
-    while (remaining_left > 0 || remaining_right > 0) {
-        usleep(100000); // Sleep 100ms to avoid busy waiting
-        CEthread_yield(); // Add yield to give other threads a chance to run
-    }
-
-    // Cleanup
-    CEmutex_destroy(&road_mutex);
-    CEcond_destroy(&road_cond);
-    CEmutex_destroy(&queue_mutex);
-
-    // Clean up the CEThreads library
-    CEthread_lib_destroy();
-
-    printf("Simulation complete. All vehicles have crossed.\n");
-    return 0;
-}
-*/
 
