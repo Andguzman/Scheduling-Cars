@@ -805,29 +805,44 @@ void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, S
     GtkWidget* hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     gtk_box_pack_end(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
+    //Botón de Spawn izquierdo
     GtkWidget* spawn_left_button = gtk_button_new_with_label("Spawn");
-
-
     paramsLeft->dir = LEFT;
     paramsLeft->id = id;
     paramsLeft->count = normales_left;
     paramsLeft->type = NORMAL;
     g_signal_connect(spawn_left_button, "clicked", G_CALLBACK(spawn_cars), paramsLeft);
-    //spawn_cars(LEFT, NORMAL, normales_left, id);
     gtk_box_pack_start(GTK_BOX(hbox), spawn_left_button, FALSE, FALSE, 0);
 
-    GtkWidget* run_button = gtk_button_new_with_label("Run");
-    g_signal_connect(run_button, "clicked", G_CALLBACK(startRunningSimulation), NULL);
-    gtk_box_pack_end(GTK_BOX(hbox), run_button, FALSE, FALSE, 0);
+    //Combo box para Spawn Izquierdo
+    GtkWidget * comboLeft = gtk_combo_box_text_new();
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(comboLeft), "Normal");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(comboLeft), "Deportivo");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(comboLeft), "Emergencia");
+    gtk_combo_box_set_active(GTK_COMBO_BOX(comboLeft), 0);
+    gtk_box_pack_start(GTK_BOX(hbox), comboLeft, FALSE, FALSE, 0);
 
+    //Botón de spawn derecho
     GtkWidget* spawn_right_button = gtk_button_new_with_label("Spawn");
     paramsRight->id = id;
     paramsRight->dir = RIGHT;
     paramsRight->count = normales_right;
     paramsRight->type = NORMAL;
     g_signal_connect(spawn_right_button, "clicked", G_CALLBACK(spawn_cars), paramsRight);
-    //(RIGHT, NORMAL, normales_right, id)
     gtk_box_pack_end(GTK_BOX(hbox), spawn_right_button, FALSE, FALSE, 0);
+
+    //Combobox para Spawn Derecho
+    GtkWidget * comboRight = gtk_combo_box_text_new();
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(comboRight), "Normal");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(comboRight), "Deportivo");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(comboRight), "Emergencia");
+    gtk_combo_box_set_active(GTK_COMBO_BOX(comboRight), 0);
+    gtk_box_pack_end(GTK_BOX(hbox), comboRight, FALSE, FALSE, 0);
+
+    //Botón de correr
+    GtkWidget* run_button = gtk_button_new_with_label("Run");
+    g_signal_connect(run_button, "clicked", G_CALLBACK(startRunningSimulation), NULL);
+    gtk_box_set_center_widget(GTK_BOX(hbox), run_button);
 
     // Show all widgets
     gtk_widget_show_all(window);
