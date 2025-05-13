@@ -380,7 +380,7 @@ void requeue_car(CarQueue* queue, Car* car) {
 
 // Read scheduler configuration from file
 void read_scheduler_config() {
-    FILE* fp = fopen("scheduler.txt", "r");
+    FILE* fp = fopen("/home/alexis/Documents/Tec/SO/Scheduling-Cars/scheduler.txt", "r");
     if (!fp) {
         // Create a default scheduler config if file doesn't exist
         fp = fopen("scheduler.txt", "w");
@@ -395,7 +395,7 @@ void read_scheduler_config() {
         fprintf(fp, "default_estimated_time=5\n");
 
         fclose(fp);
-        fp = fopen("scheduler.txt", "r");
+        fp = fopen("/home/alexis/Documents/Tec/SO/Scheduling-Cars/scheduler.txt", "r");
         if (!fp) {
             perror("Failed to open scheduler.txt");
             return;
@@ -410,6 +410,7 @@ void read_scheduler_config() {
         else if (!strcmp(key, "default_estimated_time")) default_estimated_time = atoi(val);
     }
     fclose(fp);
+
 
     // Set current scheduler based on config
     current_scheduler = get_scheduler_type(scheduler_method);
@@ -1151,6 +1152,20 @@ gboolean on_draw(GtkWidget* widget, cairo_t* cr, gpointer data) {
     sprintf(textLeft, "%d", remaining_left);
     cairo_show_text(cr, textLeft);
 
+    cairo_move_to(cr, WINDOW_WIDTH/2 - 25, 80);
+    cairo_show_text(cr, "Dirección:");
+
+    cairo_move_to(cr, WINDOW_WIDTH/2 +10, 95);
+
+    if (current_dir == LEFT) {
+        char textDir [2] = "->";
+        cairo_show_text(cr, textDir);
+    }else {
+        char textDir [2] = "<-";
+        cairo_show_text(cr, textDir);
+    }
+
+
 
     cairo_move_to(cr, WINDOW_WIDTH - 150, 80);
     cairo_show_text(cr, "Right:");
@@ -1222,7 +1237,7 @@ void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, S
     paramsLeft->dir = LEFT;
     paramsLeft->id = id;
     paramsLeft->count = normales_left;
-    paramsLeft->type = SPORT;
+    paramsLeft->type = NORMAL;
     g_signal_connect(spawn_left_button, "clicked", G_CALLBACK(spawn_cars), paramsLeft);
     gtk_box_pack_start(GTK_BOX(hbox), spawn_left_button, FALSE, FALSE, 0);
 
@@ -1295,7 +1310,6 @@ void spawnInitialCars(Direction dir, int id,int norm, int sp, int em) {
     SpawnCarsParams * newCar = malloc(sizeof(SpawnCarsParams));;
     newCar->dir = dir;
 
-    printf("Here 0");
     for (int i = 0; i < 3; i++) {
         newCar->type = typeList[i];
         newCar->id = &id;
