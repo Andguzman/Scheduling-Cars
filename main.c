@@ -128,6 +128,7 @@ typedef struct {
     int priority;           // For priority scheduler
     int estimated_time;     // For SJF scheduler
     int deadline;           // For real-time scheduler
+    int x;
 } Car;
 
 CEmutex_t road_mutex;      // Replace pthread_mutex_t
@@ -655,6 +656,25 @@ double getElapsedTime(clock_t start, clock_t end) {
     return ((double)(end - start)) / CLOCKS_PER_SEC;
 }
 
+void playCarMotion(double travel_time_seconds, double total_travel_time) {
+    clock_t begin_time = clock();
+    double time_elapsed = getElapsedTime(begin_time, clock());
+    double advanceTime = total_travel_time/(double)(ROAD_WIDTH-70);
+    clock_t lastRefresh = clock();
+
+    while (time_elapsed < travel_time_seconds) {
+        if (getElapsedTime(lastRefresh, clock()) >= advanceTime) {
+            if (car_drawn->dir == LEFT) {
+                car_drawn->x +=1;
+            }else {
+                car_drawn->x -=1;
+            }
+            lastRefresh = clock();
+        }
+        time_elapsed = getElapsedTime(begin_time, clock());
+    }
+}
+
 void* car_thread(void* arg) {
     Car* car = (Car*)arg;
     //printf("Here car %d\n", car->id);
@@ -972,51 +992,29 @@ void* car_thread(void* arg) {
     struct timespec start_time;
     clock_gettime(CLOCK_REALTIME, &start_time);
     double travel_time_seconds = travel_time_us / 1000000L;
-    clock_t begin_time = clock();
+    car_drawn->type = car->type;
+    car_drawn->dir = car->dir;
+    car_drawn->x = car->x;
     // For Round Robin, check if time slice expires during travel
     if (current_scheduler == RR && car->type != EMERGENCY) {
         // Calculate how long the car will take to cross
-
-
         // Check if car will complete crossing within time slice
         if (travel_time_seconds <= time_slice_remaining) {
             // Car completes crossing within time slice
-            usleep(travel_time_us);
+            playCarMotion(travel_time_seconds, road_length / speed);
+            car->x = car_drawn->x;
         } else {
             // Car's time slice expires during crossing
             // Let it continue anyway since it's already on the road
             // But record that it exceeded its time slice
             printf("[RR] Car %d exceeded time slice but continuing to cross.\n", car->id);
-            usleep(travel_time_us);
+            playCarMotion(travel_time_seconds, road_length / speed);
+            car->x = car_drawn->x;
             rr_timeout = 1;
         }
     } else {
         // Regular crossing for other schedulers
-
-        car_drawn->type = car->type;
-        car_drawn->dir = car->dir;
-        if (car_drawn->dir == LEFT) {
-            car_drawn->x = 10;
-        }else{
-            car_drawn->x = ROAD_WIDTH-60;
-        }
-        double time_elapsed = getElapsedTime(begin_time, clock());
-        double advanceTime = travel_time_seconds/(double)(ROAD_WIDTH-70);
-        printf("Advance time: %lf\n", travel_time_seconds);
-        clock_t lastRefresh = clock();
-
-        while (time_elapsed < travel_time_seconds) {
-            if (getElapsedTime(lastRefresh, clock()) >= advanceTime) {
-                if (car_drawn->dir == LEFT) {
-                    car_drawn->x +=1;
-                }else {
-                    car_drawn->x -=1;
-                }
-                lastRefresh = clock();
-            }
-            time_elapsed = getElapsedTime(begin_time, clock());
-        }
-
+        playCarMotion(travel_time_seconds, road_length / speed);
     }
 
 
@@ -1105,8 +1103,10 @@ void spawn_new(SpawnCarsParams * params) {
     c->type = params->type;
     if (c->dir == LEFT) {
         remaining_left++;
+        c->x = 10;
     }else {
         remaining_right++;
+        c->x = ROAD_WIDTH-60;
     }
     CEthread_t tid;
     CEthread_create(&tid, NULL, car_thread, c);
