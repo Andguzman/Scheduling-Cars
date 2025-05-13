@@ -319,7 +319,7 @@ int time_to_deadline(struct timespec arrival) {
     int elapsed = (int)(now.tv_sec - arrival.tv_sec);
     return max_wait_emergency - elapsed;
 }
-
+// Fixed can_enter_road function
 int can_enter_road(Car* car) {
     // If road is empty, car can enter
     if (cars_on_road == 0) {
@@ -327,12 +327,23 @@ int can_enter_road(Car* car) {
     }
 
     // If road has cars going in the same direction, car can enter
-    // But ONLY if there are NO cars going in the opposite direction
     if (car->dir == LEFT && cars_on_road_left > 0 && cars_on_road_right == 0) {
         return 1;
     }
     if (car->dir == RIGHT && cars_on_road_right > 0 && cars_on_road_left == 0) {
         return 1;
+    }
+
+    // For Round Robin scheduler, be more permissive about entry
+    // to prevent deadlocks between time slices
+    if (current_scheduler == RR) {
+        // If the road is about to be clear, allow entry
+        if (car->dir == LEFT && cars_on_road_right == 0) {
+            return 1;
+        }
+        if (car->dir == RIGHT && cars_on_road_left == 0) {
+            return 1;
+        }
     }
 
     // Otherwise, car cannot enter (road is occupied by cars going in opposite direction)
@@ -395,7 +406,7 @@ void read_scheduler_config() {
         fprintf(fp, "default_estimated_time=5\n");
 
         fclose(fp);
-        fp = fopen("/home/alexis/Documents/Tec/SO/Scheduling-Cars/scheduler.txt", "r");
+        fp = fopen("/home/andres/Desktop/Operativos/Scheduling-Cars/scheduler.txt", "r");
         if (!fp) {
             perror("Failed to open scheduler.txt");
             return;
@@ -678,7 +689,6 @@ void playCarMotion(double travel_time_seconds, double total_travel_time) {
 
 void* car_thread(void* arg) {
     Car* car = (Car*)arg;
-    //printf("Here car %d\n", car->id);
     // Record arrival time
     clock_gettime(CLOCK_REALTIME, &car->arrival_time);
 
@@ -714,18 +724,19 @@ void* car_thread(void* arg) {
         car->id,
         type_name(car->type),
         car->dir == LEFT ? "LEFT" : "RIGHT");
+
     // Add car to appropriate queue
     if (car->dir == LEFT) {
         enqueue_car(&left_queue, car);
     } else {
         enqueue_car(&right_queue, car);
     }
+
     CEmutex_lock(&road_mutex);
 
     // Special handling for Round Robin
     if (current_scheduler == RR && car->type != EMERGENCY) {
-        // Use current time_slice_remaining for RR scheduling
-        // But this doesn't apply to emergency vehicles - they still get priority
+        // This loop handles waiting for car's turn based on Round Robin scheduling
         while (1) {
             // Check if car is at front of its queue
             CEmutex_lock(&queue_mutex);
@@ -734,9 +745,23 @@ void* car_thread(void* arg) {
                 (right_queue.head && right_queue.head->car->id == car->id);
             CEmutex_unlock(&queue_mutex);
 
-            // CRITICAL CHANGE: This is where we check if the car can enter the road
-            // We must ensure no cars from opposite direction are on the road
-            if (is_front && can_enter_road(car)) {
+            // FIXED: First check if any emergency vehicle is approaching deadline
+            int emergency_pending = check_emergency_deadlines(&left_queue) ||
+                                   check_emergency_deadlines(&right_queue);
+
+            if (emergency_pending) {
+                CEcond_wait(&road_cond, &road_mutex);
+                continue;
+            }
+
+            // FIXED: Check can_enter_road less strictly for RR scheduler
+            int road_available = can_enter_road(car);
+
+            // Debug
+            printf("[RR Debug] Car %d: is_front=%d, road_available=%d\n",
+                car->id, is_front, road_available);
+
+            if (is_front && road_available) {
                 // Car can enter the road
                 if (car->dir == LEFT) {
                     Car* next_car = dequeue_car(&left_queue);
@@ -752,21 +777,17 @@ void* car_thread(void* arg) {
                 break;
             }
 
-            // Check if any emergency vehicle is approaching deadline
-            int emergency_pending = check_emergency_deadlines(&left_queue) ||
-                                   check_emergency_deadlines(&right_queue);
-
-            if (emergency_pending) {
-                CEcond_wait(&road_cond, &road_mutex);
-                continue;
-            }
-
             // Wait with timeout
             struct timespec wait_time = {
                 .tv_sec = 0,
                 .tv_nsec = 100000000 // 100ms
             };
+
+            // FIXED: Use timeout more aggressively
             CEcond_timedwait(&road_cond, &road_mutex, &wait_time);
+
+            // Debug - notify about waiting
+            printf("[RR Wait] Car %d waiting for turn, front=%d\n", car->id, is_front);
         }
     }
     // Emergency vehicle handling with strict deadline enforcement
@@ -818,7 +839,7 @@ void* car_thread(void* arg) {
             CEcond_timedwait(&road_cond, &road_mutex, &wait_time);
         }
     }
-    // For priority-based schedulers (Priority, SJF, REALTIME) and FCFS
+    // For other scheduler types
     else {
         // Regular car waiting logic based on flow control method
         if (strcmp(flow_method, "FIFO") == 0) {
@@ -959,7 +980,6 @@ void* car_thread(void* arg) {
         }
     }
 
-
     cars_on_road++;
 
     if (car->dir == LEFT) {
@@ -970,7 +990,7 @@ void* car_thread(void* arg) {
     road_occupied_dir = car->dir;
 
     // Add car to visualization when it enters the road
-    //add_car_visual(car->id, car->dir, car->type);
+    add_car_visual(car->id, car->dir, car->type);
 
     // Actual crossing
     printf("[Enter ] Car %d [%s] from %s side (Scheduler: %s). Total cars on road: LEFT=%d, RIGHT=%d\n",
@@ -978,12 +998,11 @@ void* car_thread(void* arg) {
            car->dir == LEFT ? "LEFT" : "RIGHT", scheduler_method,
            cars_on_road_left, cars_on_road_right);
 
-
-
     // For Round Robin, set time slice remaining
     int rr_timeout = 0;
     if (current_scheduler == RR && car->type != EMERGENCY) {
         time_slice_remaining = time_quantum;
+        printf("[RR] Car %d starting with time slice: %d seconds\n", car->id, time_slice_remaining);
     }
 
     // Release mutex while crossing to allow other cars to queue up
@@ -992,75 +1011,92 @@ void* car_thread(void* arg) {
     // For visualization - update position incrementally
     struct timespec start_time;
     clock_gettime(CLOCK_REALTIME, &start_time);
-    double travel_time_seconds = travel_time_us / 1000000L;
+    double travel_time_seconds = travel_time_us / 1000000.0;
+
     car_drawn->type = car->type;
     car_drawn->dir = car->dir;
     car_drawn->x = car->x;
+
     // For Round Robin, check if time slice expires during travel
     if (current_scheduler == RR && car->type != EMERGENCY) {
         // Calculate how long the car will take to cross
         // Check if car will complete crossing within time slice
         if (travel_time_seconds <= time_slice_remaining) {
             // Car completes crossing within time slice
+            printf("[RR] Car %d will complete crossing in %.2f seconds (within time slice)\n",
+                  car->id, travel_time_seconds);
             playCarMotion(travel_time_seconds, road_length / speed);
             car->x = car_drawn->x;
         } else {
             // Car's time slice expires during crossing
-            // Let it continue anyway since it's already on the road
-            // But record that it exceeded its time slice
-            printf("[RR] Car %d exceeded time slice but continuing to cross.\n", car->id);
-            playCarMotion(travel_time_seconds, road_length / speed);
+            // FIXED: Let it continue for the time slice, then requeue
+            printf("[RR] Car %d will take %.2f seconds, exceeding time slice of %d\n",
+                  car->id, travel_time_seconds, time_quantum);
+
+            // Only move for the time slice duration
+            playCarMotion(time_quantum, road_length / speed);
             car->x = car_drawn->x;
             rr_timeout = 1;
         }
     } else {
         // Regular crossing for other schedulers
         playCarMotion(travel_time_seconds, road_length / speed);
+        car->x = car_drawn->x;
     }
-
 
     // Update state after crossing
     CEmutex_lock(&road_mutex);
-    // Update road occupation
-    cars_on_road--;
-    if (car->dir == LEFT) {
-        cars_on_road_left--;
-        remaining_left--;
-    } else {
-        cars_on_road_right--;
-        remaining_right--;
-    }
 
-    printf("Remaining L: %d Reamining R: %d \n", remaining_left, remaining_right);
+    // Only mark car as exited if it completed the crossing
+    // For RR with timeout, car progress is saved but it's not considered "exited"
+    if (!(current_scheduler == RR && car->type != EMERGENCY && rr_timeout)) {
+        // Update road occupation
+        cars_on_road--;
+        if (car->dir == LEFT) {
+            cars_on_road_left--;
+            remaining_left--;
+        } else {
+            cars_on_road_right--;
+            remaining_right--;
+        }
 
-    if (remaining_left == 0 && remaining_right == 0) {
-        printf("Finished \n");
-        start_drawing_cars = 0;
-    }
+        printf("[Exit  ] Car %d [%s] from %s side. Remaining cars on road: LEFT=%d, RIGHT=%d\n",
+               car->id, type_name(car->type),
+               car->dir == LEFT ? "LEFT" : "RIGHT",
+               cars_on_road_left, cars_on_road_right);
 
-    printf("[Exit  ] Car %d [%s] from %s side. Remaining cars on road: LEFT=%d, RIGHT=%d\n",
-           car->id, type_name(car->type),
-           car->dir == LEFT ? "LEFT" : "RIGHT",
-           cars_on_road_left, cars_on_road_right);
+        // Update flow control state
+        if (strcmp(flow_method, "EQUITY") == 0) {
+            cars_in_window++;
 
-    // Update flow control state
-    if (strcmp(flow_method, "EQUITY") == 0) {
-        cars_in_window++;
-
-        if (cars_in_window >= W ||
-            (current_dir == LEFT && remaining_left == 0) ||
-            (current_dir == RIGHT && remaining_right == 0)) {
-            cars_in_window = 0;
-            current_dir = (current_dir == LEFT) ? RIGHT : LEFT;
-            printf("[EQUITY] Changing direction to: %s\n",
-                   current_dir == LEFT ? "LEFT" : "RIGHT");
+            if (cars_in_window >= W ||
+                (current_dir == LEFT && remaining_left == 0) ||
+                (current_dir == RIGHT && remaining_right == 0)) {
+                cars_in_window = 0;
+                current_dir = (current_dir == LEFT) ? RIGHT : LEFT;
+                printf("[EQUITY] Changing direction to: %s\n",
+                       current_dir == LEFT ? "LEFT" : "RIGHT");
             }
+        }
+    }
+    else {
+        // Car timed out in RR - need to update its position and requeue
+        printf("[RR] Car %d time slice expired at position %d\n", car->id, car->x);
     }
 
     // For Round Robin, if car timed out during crossing, put it back in queue
     if (current_scheduler == RR && car->type != EMERGENCY && rr_timeout) {
-        printf("[RR] Car %d being requeued after time slice expiration.\n", car->id);
-        // Create a new car instance since this one will be freed
+        printf("[RR] Car %d being requeued after time slice expiration\n", car->id);
+
+        // FIXED: Make sure car leaves the road before being requeued
+        cars_on_road--;
+        if (car->dir == LEFT) {
+            cars_on_road_left--;
+        } else {
+            cars_on_road_right--;
+        }
+
+        // Create a new car instance with updated position
         Car* new_car = malloc(sizeof(Car));
         *new_car = *car;  // Copy all fields
 
@@ -1070,6 +1106,16 @@ void* car_thread(void* arg) {
         } else {
             requeue_car(&right_queue, new_car);
         }
+
+        // The car is still in the visualization until its next turn
+        update_car_visual(car->id, car->x / (double)ROAD_WIDTH);
+    }
+
+    printf("Remaining L: %d Remaining R: %d\n", remaining_left, remaining_right);
+
+    if (remaining_left == 0 && remaining_right == 0) {
+        printf("Finished\n");
+        start_drawing_cars = 0;
     }
 
     // Notify waiting cars
@@ -1081,10 +1127,8 @@ void* car_thread(void* arg) {
         free(car);
     }
 
-
     return NULL;
 }
-
 
 // Update the GUI (called from main thread)
 gboolean update_gui(gpointer data) {
@@ -1340,7 +1384,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Read config
-    FILE* fp = fopen("/home/alexis/Documents/Tec/SO/Scheduling-Cars/config.txt", "r");
+    FILE* fp = fopen("//home/andres/Desktop/Operativos/Scheduling-Cars/config.txt", "r");
     if (!fp) {
         printf("Failed to open config file\n");
     }
