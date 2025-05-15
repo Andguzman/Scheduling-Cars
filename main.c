@@ -57,7 +57,9 @@ typedef struct {
     int y;
 } CarDraw;
 
-CarDraw * car_drawn;
+CarDraw * car_drawn_on_street;
+CarDraw * car_drawn_on_left_side;
+CarDraw * car_drawn_on_right_side;
 int start_drawing_cars = 0;
 GCallback spawn_cars(GtkWidget *widget, GdkEventButton event, gpointer * data);
 
@@ -602,19 +604,19 @@ void enqueue_car(CarQueue* queue, Car* car) {
     CEmutex_unlock(&queue_mutex);  // Replace pthread_mutex_unlock
 }
 
-void drawNormalCar(cairo_t *cr, int x, int laneAdjust, const CarDraw * car_draw) {
+void drawNormalCar(cairo_t *cr, int x, int y, Direction direction) {
     set_cairo_color(cr, 102, 178, 255, 255);//Cuerpo del cuarto
-    cairo_rectangle(cr, x, ROAD_Y+10+laneAdjust, 50, ROAD_HEIGHT/2-20);
+    cairo_rectangle(cr, x, y, 50, ROAD_HEIGHT/2-20);
     cairo_fill(cr);
     int directionOffset = 0;
-    if (car_draw->dir == LEFT) {
+    if (direction == LEFT) {
         directionOffset = 45;
     }
     set_cairo_color(cr, 255, 255, 0, 255);//Luces
-    cairo_rectangle(cr, x+directionOffset, ROAD_Y+14+laneAdjust, 5, 5);
+    cairo_rectangle(cr, x+directionOffset, y+4, 5, 5);
     cairo_fill(cr);
 
-    cairo_rectangle(cr, x+directionOffset, ROAD_Y+31+laneAdjust, 5, 5);
+    cairo_rectangle(cr, x+directionOffset, y+21, 5, 5);
     cairo_fill(cr);
 }
 
@@ -632,12 +634,12 @@ void drawSportCar(cairo_t *cr, int x, int y) {
     cairo_fill(cr);
 }
 
-void drawAmbulance(cairo_t *cr, int x, int y, const CarDraw * car_draw) {
+void drawAmbulance(cairo_t *cr, int x, int y, Direction direction) {
     set_cairo_color(cr, 255, 255, 255, 255);
     cairo_rectangle(cr, x, y, 50, ROAD_HEIGHT/2-20);
     cairo_fill(cr);
     int directionOffset = 0;
-    if (car_draw->dir == LEFT) {
+    if (direction == LEFT) {
         directionOffset += 32;
     }
     set_cairo_color(cr, 255, 0, 0, 255);
@@ -646,23 +648,27 @@ void drawAmbulance(cairo_t *cr, int x, int y, const CarDraw * car_draw) {
 }
 
 GCallback paint_car(GtkWidget* widget, cairo_t *cr, gpointer data) {
-    if (start_drawing_cars == 1 && car_drawn->car_entered == 1) {
-        //Dibujar los carros de la carretera
+    if (start_drawing_cars == 1 && car_drawn_on_street->car_entered == 1) {
+
         const CarDraw * car_draw = (CarDraw*)data;
         const int xPos = car_draw->x;
         int laneAdjust = 0;
         if (car_draw->dir == LEFT) {
             laneAdjust = 53;
         }
+        //Dibujar los carros de la carretera
         if (car_draw->type == NORMAL) {
-            drawNormalCar(cr, ROAD_X+10+xPos, laneAdjust, car_draw);
+            drawNormalCar(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, car_draw->dir);
+            //drawNormalCar(cr, ROAD_X-70, ROAD_Y+10+laneAdjust, car_draw->dir);
         }
         else if (car_draw->type == SPORT) {
             drawSportCar(cr, ROAD_X+10+xPos, ROAD_Y+laneAdjust);
+            //drawSportCar(cr, ROAD_X+10+ROAD_WIDTH, ROAD_Y+laneAdjust);
         }else {
-            drawAmbulance(cr, ROAD_X+xPos+10, ROAD_Y+10+laneAdjust, car_draw);
+            drawAmbulance(cr, ROAD_X+xPos+10, ROAD_Y+10+laneAdjust, car_draw->dir);
         }
         //Dibujar los carros en espera
+
 
     }
     return FALSE;
@@ -680,10 +686,10 @@ void playCarMotion(double travel_time_seconds, double total_travel_time) {
 
     while (time_elapsed < travel_time_seconds) {
         if (getElapsedTime(lastRefresh, clock()) >= advanceTime) {
-            if (car_drawn->dir == LEFT) {
-                car_drawn->x +=1;
+            if (car_drawn_on_street->dir == LEFT) {
+                car_drawn_on_street->x +=1;
             }else {
-                car_drawn->x -=1;
+                car_drawn_on_street->x -=1;
             }
             lastRefresh = clock();
         }
@@ -1008,10 +1014,10 @@ void* car_thread(void* arg) {
     struct timespec start_time;
     clock_gettime(CLOCK_REALTIME, &start_time);
     double travel_time_seconds = travel_time_us / 1000000L;
-    car_drawn->car_entered = 1;
-    car_drawn->type = car->type;
-    car_drawn->dir = car->dir;
-    car_drawn->x = car->x;
+    car_drawn_on_street->car_entered = 1;
+    car_drawn_on_street->type = car->type;
+    car_drawn_on_street->dir = car->dir;
+    car_drawn_on_street->x = car->x;
     // For Round Robin, check if time slice expires during travel
     if (current_scheduler == RR && car->type != EMERGENCY) {
         // Calculate how long the car will take to cross
@@ -1019,14 +1025,14 @@ void* car_thread(void* arg) {
         if (travel_time_seconds <= time_slice_remaining) {
             // Car completes crossing within time slice
             playCarMotion(travel_time_seconds, road_length / speed);
-            car->x = car_drawn->x;
+            car->x = car_drawn_on_street->x;
         } else {
             // Car's time slice expires during crossing
             // Let it continue anyway since it's already on the road
             // But record that it exceeded its time slice
             printf("[RR] Car %d exceeded time slice but continuing to cross.\n", car->id);
             playCarMotion(travel_time_seconds, road_length / speed);
-            car->x = car_drawn->x;
+            car->x = car_drawn_on_street->x;
             rr_timeout = 1;
         }
     } else {
@@ -1034,7 +1040,7 @@ void* car_thread(void* arg) {
         playCarMotion(travel_time_seconds, road_length / speed);
     }
 
-    car_drawn->car_entered = 0;
+    car_drawn_on_street->car_entered = 0;
 
     // Update state after crossing
     CEmutex_lock(&road_mutex);
@@ -1243,7 +1249,7 @@ void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, S
     gtk_widget_set_size_request(drawing_area, WINDOW_WIDTH - 20, WINDOW_HEIGHT - 20);
     g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(on_draw), NULL);
 
-    g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(paint_car), car_drawn);
+    g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(paint_car), car_drawn_on_street);
     gtk_box_pack_start(GTK_BOX(vbox), drawing_area, TRUE, TRUE, 0);
     // Add control buttons
     GtkWidget* hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
@@ -1407,8 +1413,12 @@ int main(int argc, char* argv[]) {
     SpawnCarsParams * paramsLeft = malloc(sizeof(SpawnCarsParams));
     SpawnCarsParams * paramsRight = malloc(sizeof(SpawnCarsParams));
 
-    car_drawn = malloc(sizeof(CarDraw));
-    car_drawn->car_entered = 0;
+    car_drawn_on_street = malloc(sizeof(CarDraw));
+    car_drawn_on_street->car_entered = 0;
+    car_drawn_on_left_side = malloc(sizeof(CarDraw));
+    car_drawn_on_left_side->dir = LEFT;
+    car_drawn_on_right_side = malloc(sizeof(CarDraw));
+    car_drawn_on_right_side->dir = RIGHT;
 
     init_gui(&argc, &argv, &id, paramsLeft, paramsRight);
 
@@ -1417,7 +1427,9 @@ int main(int argc, char* argv[]) {
 
     gtk_main();
 
-    free(car_drawn);
+    free(car_drawn_on_street);
+    free(car_drawn_on_left_side);
+    free(car_drawn_on_right_side);
     free(paramsLeft);
     free(paramsRight);
     // Cleanup
