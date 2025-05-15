@@ -50,6 +50,7 @@ typedef struct {
 } CarVisual;
 
 typedef struct {
+    int car_entered;
     Direction dir;
     CarType type;
     int x;
@@ -602,7 +603,7 @@ void enqueue_car(CarQueue* queue, Car* car) {
 }
 
 GCallback paint_car(GtkWidget* widget, cairo_t *cr, gpointer data) {
-    if (start_drawing_cars == 1) {
+    if (start_drawing_cars == 1 && car_drawn->car_entered == 1) {
         const CarDraw * car_draw = (CarDraw*)data;
         const int xPos = car_draw->x;
         int laneAdjust = 0;
@@ -993,6 +994,7 @@ void* car_thread(void* arg) {
     struct timespec start_time;
     clock_gettime(CLOCK_REALTIME, &start_time);
     double travel_time_seconds = travel_time_us / 1000000L;
+    car_drawn->car_entered = 1;
     car_drawn->type = car->type;
     car_drawn->dir = car->dir;
     car_drawn->x = car->x;
@@ -1018,6 +1020,7 @@ void* car_thread(void* arg) {
         playCarMotion(travel_time_seconds, road_length / speed);
     }
 
+    car_drawn->car_entered = 0;
 
     // Update state after crossing
     CEmutex_lock(&road_mutex);
@@ -1389,7 +1392,9 @@ int main(int argc, char* argv[]) {
 
     SpawnCarsParams * paramsLeft = malloc(sizeof(SpawnCarsParams));
     SpawnCarsParams * paramsRight = malloc(sizeof(SpawnCarsParams));
+
     car_drawn = malloc(sizeof(CarDraw));
+    car_drawn->car_entered = 0;
 
     init_gui(&argc, &argv, &id, paramsLeft, paramsRight);
 
