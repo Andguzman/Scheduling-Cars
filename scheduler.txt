@@ -1,4 +1,4 @@
 scheduler_method=RR
 time_quantum=10
 default_priority=5
-default_estimated_time=5
+default_estimated_time=10

@@ -383,7 +383,7 @@ void requeue_car(CarQueue* queue, Car* car) {
 
 // Read scheduler configuration from file
 void read_scheduler_config() {
-    FILE* fp = fopen("/home/alexis/Documents/Tec/SO/Scheduling-Cars/scheduler.txt", "r");
+    FILE* fp = fopen("/home/andres/Desktop/Operativos/Scheduling-Cars/scheduler.txt", "r");
     if (!fp) {
         // Create a default scheduler config if file doesn't exist
         fp = fopen("scheduler.txt", "w");
@@ -1363,7 +1363,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Read config
-    FILE* fp = fopen("/home/alexis/Documents/Tec/SO/Scheduling-Cars/config.txt", "r");
+    FILE* fp = fopen("/home/andres/Desktop/Operativos/Scheduling-Cars/config.txt", "r");
     if (!fp) {
         printf("Failed to open config file\n");
     }
