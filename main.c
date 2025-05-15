@@ -602,54 +602,68 @@ void enqueue_car(CarQueue* queue, Car* car) {
     CEmutex_unlock(&queue_mutex);  // Replace pthread_mutex_unlock
 }
 
+void drawNormalCar(cairo_t *cr, int x, int laneAdjust, const CarDraw * car_draw) {
+    set_cairo_color(cr, 102, 178, 255, 255);//Cuerpo del cuarto
+    cairo_rectangle(cr, x, ROAD_Y+10+laneAdjust, 50, ROAD_HEIGHT/2-20);
+    cairo_fill(cr);
+    int directionOffset = 0;
+    if (car_draw->dir == LEFT) {
+        directionOffset = 45;
+    }
+    set_cairo_color(cr, 255, 255, 0, 255);//Luces
+    cairo_rectangle(cr, x+directionOffset, ROAD_Y+14+laneAdjust, 5, 5);
+    cairo_fill(cr);
+
+    cairo_rectangle(cr, x+directionOffset, ROAD_Y+31+laneAdjust, 5, 5);
+    cairo_fill(cr);
+}
+
+void drawSportCar(cairo_t *cr, int x, int y) {
+    set_cairo_color(cr, 255, 128, 0, 255);//Cuerpo del carro
+    cairo_rectangle(cr, x, 10+y, 50, ROAD_HEIGHT/2-20);
+    cairo_fill(cr);
+
+    set_cairo_color(cr, 0, 0, 0, 255);//Detalles
+    cairo_rectangle(cr, x, 14+y, 50, 5);
+    cairo_fill(cr);
+
+    set_cairo_color(cr, 0, 0, 0, 255);
+    cairo_rectangle(cr, x, 31+y, 50, 5);
+    cairo_fill(cr);
+}
+
+void drawAmbulance(cairo_t *cr, int x, int y, const CarDraw * car_draw) {
+    set_cairo_color(cr, 255, 255, 255, 255);
+    cairo_rectangle(cr, x, y, 50, ROAD_HEIGHT/2-20);
+    cairo_fill(cr);
+    int directionOffset = 0;
+    if (car_draw->dir == LEFT) {
+        directionOffset += 32;
+    }
+    set_cairo_color(cr, 255, 0, 0, 255);
+    cairo_rectangle(cr, x+5+directionOffset, y+10, 5, 9);
+    cairo_fill(cr);
+}
+
 GCallback paint_car(GtkWidget* widget, cairo_t *cr, gpointer data) {
     if (start_drawing_cars == 1 && car_drawn->car_entered == 1) {
+        //Dibujar los carros de la carretera
         const CarDraw * car_draw = (CarDraw*)data;
         const int xPos = car_draw->x;
         int laneAdjust = 0;
         if (car_draw->dir == LEFT) {
             laneAdjust = 53;
         }
-
         if (car_draw->type == NORMAL) {
-            set_cairo_color(cr, 102, 178, 255, 255);//Cuerpo del cuarto
-            cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, 50, ROAD_HEIGHT/2-20);
-            cairo_fill(cr);
-            int directionOffset = xPos;
-            if (car_draw->dir == LEFT) {
-                directionOffset += 45;
-            }
-            set_cairo_color(cr, 255, 255, 0, 255);//Luces
-            cairo_rectangle(cr, ROAD_X+10+directionOffset, ROAD_Y+14+laneAdjust, 5, 5);
-            cairo_fill(cr);
-
-            cairo_rectangle(cr, ROAD_X+10+directionOffset, ROAD_Y+31+laneAdjust, 5, 5);
-            cairo_fill(cr);
+            drawNormalCar(cr, ROAD_X+10+xPos, laneAdjust, car_draw);
         }
         else if (car_draw->type == SPORT) {
-            set_cairo_color(cr, 255, 128, 0, 255);//Cuerpo del carro
-            cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, 50, ROAD_HEIGHT/2-20);
-            cairo_fill(cr);
-
-            set_cairo_color(cr, 0, 0, 0, 255);//Detalles
-            cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+14+laneAdjust, 50, 5);
-            cairo_fill(cr);
-
-            set_cairo_color(cr, 0, 0, 0, 255);
-            cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+31+laneAdjust, 50, 5);
-            cairo_fill(cr);
+            drawSportCar(cr, ROAD_X+10+xPos, ROAD_Y+laneAdjust);
         }else {
-            set_cairo_color(cr, 255, 255, 255, 255);
-            cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, 50, ROAD_HEIGHT/2-20);
-            cairo_fill(cr);
-            int directionOffset = xPos;
-            if (car_draw->dir == LEFT) {
-                directionOffset += 32;
-            }
-            set_cairo_color(cr, 255, 0, 0, 255);
-            cairo_rectangle(cr, ROAD_X+15+directionOffset, ROAD_Y+20+laneAdjust, 5, 9);
-            cairo_fill(cr);
+            drawAmbulance(cr, ROAD_X+xPos+10, ROAD_Y+10+laneAdjust, car_draw);
         }
+        //Dibujar los carros en espera
+
     }
     return FALSE;
 }
