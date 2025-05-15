@@ -50,13 +50,16 @@ typedef struct {
 } CarVisual;
 
 typedef struct {
+    int car_entered;
     Direction dir;
     CarType type;
     int x;
     int y;
 } CarDraw;
 
-CarDraw * car_drawn;
+CarDraw * car_drawn_on_street;
+CarDraw * car_drawn_on_left_side;
+CarDraw * car_drawn_on_right_side;
 int start_drawing_cars = 0;
 GCallback spawn_cars(GtkWidget *widget, GdkEventButton event, gpointer * data);
 
@@ -338,6 +341,7 @@ int can_enter_road(Car* car) {
     // Otherwise, car cannot enter (road is occupied by cars going in opposite direction)
     return 0;
 }
+
 // Function to select scheduler type from string
 SchedulerType get_scheduler_type(const char* method) {
     if (strcmp(method, "RR") == 0) return RR;
@@ -394,7 +398,7 @@ void read_scheduler_config() {
         fprintf(fp, "default_estimated_time=5\n");
 
         fclose(fp);
-        fp = fopen("/home/andres/Desktop/Operativos/Scheduling-Cars/scheduler.txt", "r");
+        fp = fopen("/home/alexis/Documents/Tec/SO/Scheduling-Cars/scheduler.txt", "r");
         if (!fp) {
             perror("Failed to open scheduler.txt");
             return;
@@ -600,54 +604,72 @@ void enqueue_car(CarQueue* queue, Car* car) {
     CEmutex_unlock(&queue_mutex);  // Replace pthread_mutex_unlock
 }
 
+void drawNormalCar(cairo_t *cr, int x, int y, Direction direction) {
+    set_cairo_color(cr, 102, 178, 255, 255);//Cuerpo del cuarto
+    cairo_rectangle(cr, x, y, 50, ROAD_HEIGHT/2-20);
+    cairo_fill(cr);
+    int directionOffset = 0;
+    if (direction == LEFT) {
+        directionOffset = 45;
+    }
+    set_cairo_color(cr, 255, 255, 0, 255);//Luces
+    cairo_rectangle(cr, x+directionOffset, y+4, 5, 5);
+    cairo_fill(cr);
+
+    cairo_rectangle(cr, x+directionOffset, y+21, 5, 5);
+    cairo_fill(cr);
+}
+
+void drawSportCar(cairo_t *cr, int x, int y) {
+    set_cairo_color(cr, 255, 128, 0, 255);//Cuerpo del carro
+    cairo_rectangle(cr, x, 10+y, 50, ROAD_HEIGHT/2-20);
+    cairo_fill(cr);
+
+    set_cairo_color(cr, 0, 0, 0, 255);//Detalles
+    cairo_rectangle(cr, x, 14+y, 50, 5);
+    cairo_fill(cr);
+
+    set_cairo_color(cr, 0, 0, 0, 255);
+    cairo_rectangle(cr, x, 31+y, 50, 5);
+    cairo_fill(cr);
+}
+
+void drawAmbulance(cairo_t *cr, int x, int y, Direction direction) {
+    set_cairo_color(cr, 255, 255, 255, 255);
+    cairo_rectangle(cr, x, y, 50, ROAD_HEIGHT/2-20);
+    cairo_fill(cr);
+    int directionOffset = 0;
+    if (direction == LEFT) {
+        directionOffset += 32;
+    }
+    set_cairo_color(cr, 255, 0, 0, 255);
+    cairo_rectangle(cr, x+5+directionOffset, y+10, 5, 9);
+    cairo_fill(cr);
+}
+
 GCallback paint_car(GtkWidget* widget, cairo_t *cr, gpointer data) {
-    if (start_drawing_cars == 1) {
+    if (start_drawing_cars == 1 && car_drawn_on_street->car_entered == 1) {
+
         const CarDraw * car_draw = (CarDraw*)data;
         const int xPos = car_draw->x;
         int laneAdjust = 0;
         if (car_draw->dir == LEFT) {
             laneAdjust = 53;
         }
-
+        //Dibujar los carros de la carretera
         if (car_draw->type == NORMAL) {
-            set_cairo_color(cr, 102, 178, 255, 255);//Cuerpo del cuarto
-            cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, 50, ROAD_HEIGHT/2-20);
-            cairo_fill(cr);
-            int directionOffset = xPos;
-            if (car_draw->dir == LEFT) {
-                directionOffset += 45;
-            }
-            set_cairo_color(cr, 255, 255, 0, 255);//Luces
-            cairo_rectangle(cr, ROAD_X+10+directionOffset, ROAD_Y+14+laneAdjust, 5, 5);
-            cairo_fill(cr);
-
-            cairo_rectangle(cr, ROAD_X+10+directionOffset, ROAD_Y+31+laneAdjust, 5, 5);
-            cairo_fill(cr);
+            drawNormalCar(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, car_draw->dir);
+            //drawNormalCar(cr, ROAD_X-70, ROAD_Y+10+laneAdjust, car_draw->dir);
         }
         else if (car_draw->type == SPORT) {
-            set_cairo_color(cr, 255, 128, 0, 255);//Cuerpo del carro
-            cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, 50, ROAD_HEIGHT/2-20);
-            cairo_fill(cr);
-
-            set_cairo_color(cr, 0, 0, 0, 255);//Detalles
-            cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+14+laneAdjust, 50, 5);
-            cairo_fill(cr);
-
-            set_cairo_color(cr, 0, 0, 0, 255);
-            cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+31+laneAdjust, 50, 5);
-            cairo_fill(cr);
+            drawSportCar(cr, ROAD_X+10+xPos, ROAD_Y+laneAdjust);
+            //drawSportCar(cr, ROAD_X+10+ROAD_WIDTH, ROAD_Y+laneAdjust);
         }else {
-            set_cairo_color(cr, 255, 255, 255, 255);
-            cairo_rectangle(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, 50, ROAD_HEIGHT/2-20);
-            cairo_fill(cr);
-            int directionOffset = xPos;
-            if (car_draw->dir == LEFT) {
-                directionOffset += 32;
-            }
-            set_cairo_color(cr, 255, 0, 0, 255);
-            cairo_rectangle(cr, ROAD_X+15+directionOffset, ROAD_Y+20+laneAdjust, 5, 9);
-            cairo_fill(cr);
+            drawAmbulance(cr, ROAD_X+xPos+10, ROAD_Y+10+laneAdjust, car_draw->dir);
         }
+        //Dibujar los carros en espera
+
+
     }
     return FALSE;
 }
@@ -664,10 +686,10 @@ void playCarMotion(double travel_time_seconds, double total_travel_time) {
 
     while (time_elapsed < travel_time_seconds) {
         if (getElapsedTime(lastRefresh, clock()) >= advanceTime) {
-            if (car_drawn->dir == LEFT) {
-                car_drawn->x +=1;
+            if (car_drawn_on_street->dir == LEFT) {
+                car_drawn_on_street->x +=1;
             }else {
-                car_drawn->x -=1;
+                car_drawn_on_street->x -=1;
             }
             lastRefresh = clock();
         }
@@ -677,6 +699,7 @@ void playCarMotion(double travel_time_seconds, double total_travel_time) {
 
 void* car_thread(void* arg) {
     Car* car = (Car*)arg;
+    //printf("Here car %d\n", car->id);
     // Record arrival time
     clock_gettime(CLOCK_REALTIME, &car->arrival_time);
 
@@ -712,17 +735,15 @@ void* car_thread(void* arg) {
         car->id,
         type_name(car->type),
         car->dir == LEFT ? "LEFT" : "RIGHT");
-
     // Add car to appropriate queue
     if (car->dir == LEFT) {
         enqueue_car(&left_queue, car);
     } else {
         enqueue_car(&right_queue, car);
     }
-
     CEmutex_lock(&road_mutex);
 
-        // Special handling for Round Robin
+    // Special handling for Round Robin
     if (current_scheduler == RR && car->type != EMERGENCY) {
         // Use current time_slice_remaining for RR scheduling
         // But this doesn't apply to emergency vehicles - they still get priority
@@ -761,9 +782,9 @@ void* car_thread(void* arg) {
                 continue;
             }
 
-            // Wait with timeout - CEThreads doesn't have built-in timedwait so we'll adapt
+            // Wait with timeout
             struct timespec wait_time = {
-                .tv_sec = time(NULL) + 0,
+                .tv_sec = 0,
                 .tv_nsec = 100000000 // 100ms
             };
             CEcond_timedwait(&road_cond, &road_mutex, &wait_time);
@@ -818,7 +839,7 @@ void* car_thread(void* arg) {
             CEcond_timedwait(&road_cond, &road_mutex, &wait_time);
         }
     }
-    // For other scheduler types
+    // For priority-based schedulers (Priority, SJF, REALTIME) and FCFS
     else {
         // Regular car waiting logic based on flow control method
         if (strcmp(flow_method, "FIFO") == 0) {
@@ -959,6 +980,7 @@ void* car_thread(void* arg) {
         }
     }
 
+
     cars_on_road++;
 
     if (car->dir == LEFT) {
@@ -969,7 +991,7 @@ void* car_thread(void* arg) {
     road_occupied_dir = car->dir;
 
     // Add car to visualization when it enters the road
-    add_car_visual(car->id, car->dir, car->type);
+    //add_car_visual(car->id, car->dir, car->type);
 
     // Actual crossing
     printf("[Enter ] Car %d [%s] from %s side (Scheduler: %s). Total cars on road: LEFT=%d, RIGHT=%d\n",
@@ -977,11 +999,12 @@ void* car_thread(void* arg) {
            car->dir == LEFT ? "LEFT" : "RIGHT", scheduler_method,
            cars_on_road_left, cars_on_road_right);
 
+
+
     // For Round Robin, set time slice remaining
     int rr_timeout = 0;
     if (current_scheduler == RR && car->type != EMERGENCY) {
         time_slice_remaining = time_quantum;
-        printf("[RR] Car %d starting with time slice: %d seconds\n", car->id, time_slice_remaining);
     }
 
     // Release mutex while crossing to allow other cars to queue up
@@ -990,72 +1013,71 @@ void* car_thread(void* arg) {
     // For visualization - update position incrementally
     struct timespec start_time;
     clock_gettime(CLOCK_REALTIME, &start_time);
-    double travel_time_seconds = travel_time_us / 1000000.0;
-
-    car_drawn->type = car->type;
-    car_drawn->dir = car->dir;
-    car_drawn->x = car->x;
-
+    double travel_time_seconds = travel_time_us / 1000000L;
+    car_drawn_on_street->car_entered = 1;
+    car_drawn_on_street->type = car->type;
+    car_drawn_on_street->dir = car->dir;
+    car_drawn_on_street->x = car->x;
     // For Round Robin, check if time slice expires during travel
     if (current_scheduler == RR && car->type != EMERGENCY) {
         // Calculate how long the car will take to cross
-        long travel_time_seconds = travel_time_us / 1000000L;
-
         // Check if car will complete crossing within time slice
         if (travel_time_seconds <= time_slice_remaining) {
             // Car completes crossing within time slice
-            usleep(travel_time_us);
+            playCarMotion(travel_time_seconds, road_length / speed);
+            car->x = car_drawn_on_street->x;
         } else {
             // Car's time slice expires during crossing
             // Let it continue anyway since it's already on the road
             // But record that it exceeded its time slice
             printf("[RR] Car %d exceeded time slice but continuing to cross.\n", car->id);
-            usleep(travel_time_us);
+            playCarMotion(travel_time_seconds, road_length / speed);
+            car->x = car_drawn_on_street->x;
             rr_timeout = 1;
         }
     } else {
         // Regular crossing for other schedulers
-        usleep(travel_time_us);
+        playCarMotion(travel_time_seconds, road_length / speed);
     }
+
+    car_drawn_on_street->car_entered = 0;
 
     // Update state after crossing
     CEmutex_lock(&road_mutex);
-
-    // Only mark car as exited if it completed the crossing
-    // For RR with timeout, car progress is saved but it's not considered "exited"
-    if (!(current_scheduler == RR && car->type != EMERGENCY && rr_timeout)) {
-        // Update road occupation
-        cars_on_road--;
-        if (car->dir == LEFT) {
-            cars_on_road_left--;
-            remaining_left--;
-        } else {
-            cars_on_road_right--;
-            remaining_right--;
-        }
-
-        printf("[Exit  ] Car %d [%s] from %s side. Remaining cars on road: LEFT=%d, RIGHT=%d\n",
-               car->id, type_name(car->type),
-               car->dir == LEFT ? "LEFT" : "RIGHT",
-               cars_on_road_left, cars_on_road_right);
-
-        // Update flow control state
-        if (strcmp(flow_method, "EQUITY") == 0) {
-            cars_in_window++;
-
-            if (cars_in_window >= W ||
-                (current_dir == LEFT && remaining_left == 0) ||
-                (current_dir == RIGHT && remaining_right == 0)) {
-                cars_in_window = 0;
-                current_dir = (current_dir == LEFT) ? RIGHT : LEFT;
-                printf("[EQUITY] Changing direction to: %s\n",
-                       current_dir == LEFT ? "LEFT" : "RIGHT");
-            }
-        }
+    // Update road occupation
+    cars_on_road--;
+    if (car->dir == LEFT) {
+        cars_on_road_left--;
+        remaining_left--;
+    } else {
+        cars_on_road_right--;
+        remaining_right--;
     }
-    else {
-        // Car timed out in RR - need to update its position and requeue
-        printf("[RR] Car %d time slice expired at position %d\n", car->id, car->x);
+
+    printf("Remaining L: %d Reamining R: %d \n", remaining_left, remaining_right);
+
+    if (remaining_left == 0 && remaining_right == 0) {
+        printf("Finished \n");
+        start_drawing_cars = 0;
+    }
+
+    printf("[Exit  ] Car %d [%s] from %s side. Remaining cars on road: LEFT=%d, RIGHT=%d\n",
+           car->id, type_name(car->type),
+           car->dir == LEFT ? "LEFT" : "RIGHT",
+           cars_on_road_left, cars_on_road_right);
+
+    // Update flow control state
+    if (strcmp(flow_method, "EQUITY") == 0) {
+        cars_in_window++;
+
+        if (cars_in_window >= W ||
+            (current_dir == LEFT && remaining_left == 0) ||
+            (current_dir == RIGHT && remaining_right == 0)) {
+            cars_in_window = 0;
+            current_dir = (current_dir == LEFT) ? RIGHT : LEFT;
+            printf("[EQUITY] Changing direction to: %s\n",
+                   current_dir == LEFT ? "LEFT" : "RIGHT");
+            }
     }
 
     // For Round Robin, if car timed out during crossing, put it back in queue
@@ -1073,14 +1095,6 @@ void* car_thread(void* arg) {
         }
     }
 
-
-    printf("Remaining L: %d Remaining R: %d\n", remaining_left, remaining_right);
-
-    if (remaining_left == 0 && remaining_right == 0) {
-        printf("Finished\n");
-        start_drawing_cars = 0;
-    }
-
     // Notify waiting cars
     CEcond_broadcast(&road_cond);
     CEmutex_unlock(&road_mutex);
@@ -1090,8 +1104,10 @@ void* car_thread(void* arg) {
         free(car);
     }
 
+
     return NULL;
 }
+
 
 // Update the GUI (called from main thread)
 gboolean update_gui(gpointer data) {
@@ -1233,7 +1249,7 @@ void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, S
     gtk_widget_set_size_request(drawing_area, WINDOW_WIDTH - 20, WINDOW_HEIGHT - 20);
     g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(on_draw), NULL);
 
-    g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(paint_car), car_drawn);
+    g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(paint_car), car_drawn_on_street);
     gtk_box_pack_start(GTK_BOX(vbox), drawing_area, TRUE, TRUE, 0);
     // Add control buttons
     GtkWidget* hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
@@ -1347,7 +1363,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Read config
-    FILE* fp = fopen("//home/andres/Desktop/Operativos/Scheduling-Cars/config.txt", "r");
+    FILE* fp = fopen("/home/alexis/Documents/Tec/SO/Scheduling-Cars/config.txt", "r");
     if (!fp) {
         printf("Failed to open config file\n");
     }
@@ -1396,7 +1412,13 @@ int main(int argc, char* argv[]) {
 
     SpawnCarsParams * paramsLeft = malloc(sizeof(SpawnCarsParams));
     SpawnCarsParams * paramsRight = malloc(sizeof(SpawnCarsParams));
-    car_drawn = malloc(sizeof(CarDraw));
+
+    car_drawn_on_street = malloc(sizeof(CarDraw));
+    car_drawn_on_street->car_entered = 0;
+    car_drawn_on_left_side = malloc(sizeof(CarDraw));
+    car_drawn_on_left_side->dir = LEFT;
+    car_drawn_on_right_side = malloc(sizeof(CarDraw));
+    car_drawn_on_right_side->dir = RIGHT;
 
     init_gui(&argc, &argv, &id, paramsLeft, paramsRight);
 
@@ -1405,7 +1427,9 @@ int main(int argc, char* argv[]) {
 
     gtk_main();
 
-    free(car_drawn);
+    free(car_drawn_on_street);
+    free(car_drawn_on_left_side);
+    free(car_drawn_on_right_side);
     free(paramsLeft);
     free(paramsRight);
     // Cleanup
