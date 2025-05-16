@@ -230,7 +230,7 @@ Car* dequeue_car(CarQueue* queue) {
             emergency_vehicles_waiting_right--;
         }
     }
-
+    queue->size -= 1;
     // Free node
     free(node);
 
@@ -650,29 +650,48 @@ void drawAmbulance(cairo_t *cr, int x, int y, Direction direction) {
 }
 
 GCallback paint_car(GtkWidget* widget, cairo_t *cr, gpointer data) {
-    if (start_drawing_cars == 1 && car_drawn_on_street->car_entered == 1) {
-
-        const CarDraw * car_draw = (CarDraw*)data;
-        const int xPos = car_draw->x;
-        int laneAdjust = 0;
-        if (car_draw->dir == LEFT) {
-            laneAdjust = 53;
+    if (start_drawing_cars == 1 ) {
+        if (car_drawn_on_street->car_entered == 1) {
+            const CarDraw * car_draw = (CarDraw*)data;
+            const int xPos = car_draw->x;
+            int laneAdjust = 0;
+            if (car_draw->dir == LEFT) {
+                laneAdjust = 53;
+            }
+            //Dibujar los carros de la carretera
+            if (car_draw->type == NORMAL) {
+                drawNormalCar(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, car_draw->dir);
+            }
+            else if (car_draw->type == SPORT) {
+                drawSportCar(cr, ROAD_X+10+xPos, ROAD_Y+laneAdjust);
+            }else {
+                drawAmbulance(cr, ROAD_X+xPos+10, ROAD_Y+10+laneAdjust, car_draw->dir);
+            }
+            //Dibujar los carros en espera
         }
-        //Dibujar los carros de la carretera
-        if (car_draw->type == NORMAL) {
-            drawNormalCar(cr, ROAD_X+10+xPos, ROAD_Y+10+laneAdjust, car_draw->dir);
-            //drawNormalCar(cr, ROAD_X-70, ROAD_Y+10+laneAdjust, car_draw->dir);
+        if (car_drawn_on_left_side->car_entered == 1) {
+            if (car_drawn_on_left_side->type == NORMAL) {
+                drawNormalCar(cr, ROAD_X-70, ROAD_Y+63, LEFT);
+            }
+            else if (car_drawn_on_left_side->type == SPORT) {
+                drawSportCar(cr, ROAD_X-70, ROAD_Y+53);
+            }else {
+                drawAmbulance(cr, ROAD_X-70, ROAD_Y+63, LEFT);
+            }
         }
-        else if (car_draw->type == SPORT) {
-            drawSportCar(cr, ROAD_X+10+xPos, ROAD_Y+laneAdjust);
-            //drawSportCar(cr, ROAD_X+10+ROAD_WIDTH, ROAD_Y+laneAdjust);
-        }else {
-            drawAmbulance(cr, ROAD_X+xPos+10, ROAD_Y+10+laneAdjust, car_draw->dir);
+        if (car_drawn_on_right_side->car_entered == 1) {
+            if (car_drawn_on_right_side->type == NORMAL) {
+                drawNormalCar(cr, ROAD_X+ROAD_WIDTH+20, ROAD_Y+10, RIGHT);
+            }
+            else if (car_drawn_on_right_side->type == SPORT) {
+                drawSportCar(cr, ROAD_X+ROAD_WIDTH+20, ROAD_Y);
+            }else {
+                drawAmbulance(cr, ROAD_X+ROAD_WIDTH+20, ROAD_Y+10, RIGHT);
+            }
         }
-        //Dibujar los carros en espera
-
 
     }
+
     return FALSE;
 }
 
@@ -916,6 +935,7 @@ void* car_thread(void* arg) {
                         }
                     }
                     break;
+
                 }
 
                 // Check if any emergency vehicle is approaching deadline
@@ -994,7 +1014,6 @@ void* car_thread(void* arg) {
 
     // Add car to visualization when it enters the road
     //add_car_visual(car->id, car->dir, car->type);
-
     // Actual crossing
     printf("[Enter ] Car %d [%s] from %s side (Scheduler: %s). Total cars on road: LEFT=%d, RIGHT=%d\n",
            car->id, type_name(car->type),
@@ -1042,7 +1061,7 @@ void* car_thread(void* arg) {
         playCarMotion(travel_time_seconds, road_length / speed);
     }
 
-    car_drawn_on_street->car_entered = 0;
+
 
     // Update state after crossing
     CEmutex_lock(&road_mutex);
@@ -1486,9 +1505,10 @@ int main(int argc, char* argv[]) {
     car_drawn_on_street->car_entered = 0;
     car_drawn_on_left_side = malloc(sizeof(CarDraw));
     car_drawn_on_left_side->dir = LEFT;
+    car_drawn_on_left_side->car_entered = 0;
     car_drawn_on_right_side = malloc(sizeof(CarDraw));
     car_drawn_on_right_side->dir = RIGHT;
-
+    car_drawn_on_right_side->car_entered = 0;
 
     init_gui(&argc, &argv, &id, paramsLeft, paramsRight);
 
