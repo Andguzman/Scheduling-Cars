@@ -60,6 +60,7 @@ typedef struct {
 CarDraw * car_drawn_on_street;
 CarDraw * car_drawn_on_left_side;
 CarDraw * car_drawn_on_right_side;
+
 int start_drawing_cars = 0;
 GCallback spawn_cars(GtkWidget *widget, GdkEventButton event, gpointer * data);
 
@@ -166,7 +167,8 @@ int signal_time;
 int max_wait_emergency;
 int normales_left, deportivos_left, emergencia_left;
 int normales_right, deportivos_right, emergencia_right;
-
+GtkWidget * settingsWidgets[8];
+int settingsVariables[7];
 // Estado para EQUITY y SIGNAL
 Direction current_dir;
 int cars_in_window;
@@ -383,7 +385,7 @@ void requeue_car(CarQueue* queue, Car* car) {
 
 // Read scheduler configuration from file
 void read_scheduler_config() {
-    FILE* fp = fopen("/home/andres/Desktop/Operativos/Scheduling-Cars/scheduler.txt", "r");
+    FILE* fp = fopen("/home/alexis/Documents/Tec/SO/Scheduling-Cars/scheduler.txt", "r");
     if (!fp) {
         // Create a default scheduler config if file doesn't exist
         fp = fopen("scheduler.txt", "w");
@@ -1230,6 +1232,18 @@ GCallback change_car_type(GtkWidget *widget, GdkEventButton event, gpointer * da
     }
 }
 
+GCallback saveNewSettings(GtkWidget *widget, GdkEventButton event, gpointer * data) {
+    printf("Flow: %s\n", flow_method);
+    for (int i = 0; i < 8; i++) {
+        if (i > 0) {
+            settingsVariables[i-1] = atoi(gtk_entry_get_text(GTK_ENTRY(settingsWidgets[i])));
+        }else {
+            sprintf(flow_method, "%s", gtk_entry_get_text(GTK_ENTRY(settingsWidgets[i])));
+        }
+    }
+    printf("Flow: %s\n", flow_method);
+}
+
 void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, SpawnCarsParams * paramsRight) {
     gtk_init(argc, argv);
 
@@ -1240,9 +1254,15 @@ void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, S
     gtk_container_set_border_width(GTK_CONTAINER(window), 10);
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
+    //Box principal para dividir entre el lado de configuración y simulación
+    GtkWidget * hMainBox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+
+    gtk_container_add(GTK_CONTAINER(window), hMainBox);
+
+
     // Create a vertical box
     GtkWidget* vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-    gtk_container_add(GTK_CONTAINER(window), vbox);
+    gtk_box_pack_start(GTK_BOX(hMainBox), vbox, TRUE, TRUE, 0);
 
     // Create drawing area
     drawing_area = gtk_drawing_area_new();
@@ -1295,6 +1315,46 @@ void init_gui(int* argc, char*** argv, int * id, SpawnCarsParams * paramsLeft, S
     GtkWidget* run_button = gtk_button_new_with_label("Run");
     g_signal_connect(run_button, "clicked", G_CALLBACK(startRunningSimulation), NULL);
     gtk_box_set_center_widget(GTK_BOX(hbox), run_button);
+
+
+    //Área para cambios manuales
+    GtkWidget * listSettings = gtk_list_box_new();
+    GtkWidget* vSettingsBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+
+    gtk_box_pack_end(GTK_BOX(hMainBox), vSettingsBox, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vSettingsBox), listSettings, FALSE, FALSE, 0);
+
+    //Creación de la lista de las configuraciones:
+    const char * listSettingsNames[8] = {"Flow: ", "Road Length: ", "Car speed: ", "Num left: ", "Num right: ", "W: ", "Signal time: ", "Max wait (Ambulance): "};
+    //GtkWidget * settingsBoxes[8];
+
+
+    for (int i = 0; i < 8; i++) {
+        GtkWidget* boxSetting = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
+        GtkWidget *labelWidget = gtk_label_new (listSettingsNames[i]);
+        GtkWidget *textWidget = gtk_entry_new();
+        GtkEntryBuffer * textEntry;
+        if (i == 0) {
+            textEntry = gtk_entry_buffer_new(flow_method, 16);
+        }else {
+            char str [5];
+            sprintf(str, "%d", settingsVariables[i-1]);
+            textEntry = gtk_entry_buffer_new(&str, 5);
+        }
+        gtk_entry_set_buffer(GTK_ENTRY(textWidget), textEntry);
+        gtk_box_pack_start(GTK_BOX(boxSetting), labelWidget, FALSE, FALSE, 0);
+        gtk_box_pack_end(GTK_BOX(boxSetting), textWidget, FALSE, FALSE, 0);
+        gtk_list_box_insert(GTK_LIST_BOX(listSettings), boxSetting, -1);
+        settingsWidgets[i] = textWidget;
+    }
+
+    //Botón para salvar los cambios
+    GtkWidget* save_button = gtk_button_new_with_label("Save");
+    g_signal_connect(save_button, "clicked", G_CALLBACK(saveNewSettings), settingsWidgets);
+    gtk_box_set_center_widget(GTK_BOX(hbox), run_button);
+
+    gtk_box_pack_end(GTK_BOX(vSettingsBox), save_button, FALSE, FALSE, 0);
+
 
     // Show all widgets
     gtk_widget_show_all(window);
@@ -1363,7 +1423,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Read config
-    FILE* fp = fopen("/home/andres/Desktop/Operativos/Scheduling-Cars/config.txt", "r");
+    FILE* fp = fopen("/home/alexis/Documents/Tec/SO/Scheduling-Cars/config.txt", "r");
     if (!fp) {
         printf("Failed to open config file\n");
     }
@@ -1385,6 +1445,15 @@ int main(int argc, char* argv[]) {
         else if (!strcmp(key, "emergencia_right")) emergencia_right = atoi(val);
     }
     fclose(fp);
+
+    settingsVariables[0] = road_length;
+    settingsVariables[1] = base_speed;
+    settingsVariables[2] = num_left;
+    settingsVariables[3] = num_right;
+    settingsVariables[4] = W;
+    settingsVariables[5] = signal_time;
+    settingsVariables[6] = max_wait_emergency;
+
     // ... (rest of configuration and initialization unchanged)
     read_scheduler_config();
     CEmutex_init(&road_mutex, NULL);
@@ -1419,6 +1488,7 @@ int main(int argc, char* argv[]) {
     car_drawn_on_left_side->dir = LEFT;
     car_drawn_on_right_side = malloc(sizeof(CarDraw));
     car_drawn_on_right_side->dir = RIGHT;
+
 
     init_gui(&argc, &argv, &id, paramsLeft, paramsRight);
 

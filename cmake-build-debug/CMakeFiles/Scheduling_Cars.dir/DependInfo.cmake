@@ -8,9 +8,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/andres/Desktop/Operativos/Scheduling-Cars/CEThreads.c" "CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o" "gcc" "CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o.d"
-  "/home/andres/Desktop/Operativos/Scheduling-Cars/main.c" "CMakeFiles/Scheduling_Cars.dir/main.c.o" "gcc" "CMakeFiles/Scheduling_Cars.dir/main.c.o.d"
-  "" "Scheduling_Cars" "gcc" "CMakeFiles/Scheduling_Cars.dir/link.d"
+  "/home/alexis/Documents/Tec/SO/Scheduling-Cars/CEThreads.c" "CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o" "gcc" "CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o.d"
+  "/home/alexis/Documents/Tec/SO/Scheduling-Cars/main.c" "CMakeFiles/Scheduling_Cars.dir/main.c.o" "gcc" "CMakeFiles/Scheduling_Cars.dir/main.c.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.
