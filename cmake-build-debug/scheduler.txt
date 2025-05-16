@@ -1,4 +1,0 @@
-scheduler_method=FCFS
-time_quantum=2
-default_priority=5
-default_estimated_time=5

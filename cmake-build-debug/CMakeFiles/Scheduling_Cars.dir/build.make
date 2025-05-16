@@ -44,19 +44,19 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /snap/clion/341/bin/cmake/linux/x64/bin/cmake
+CMAKE_COMMAND = /home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/bin/cmake
 
 # The command to remove a file.
-RM = /snap/clion/341/bin/cmake/linux/x64/bin/cmake -E rm -f
+RM = /home/andres/Downloads/CLion-2025.1/clion-2025.1/bin/cmake/linux/x64/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/alexis/Documents/Tec/SO/Scheduling-Cars
+CMAKE_SOURCE_DIR = /home/andres/Desktop/Operativos/Scheduling-Cars
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/alexis/Documents/Tec/SO/Scheduling-Cars/cmake-build-debug
+CMAKE_BINARY_DIR = /home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug
 
 # Include any dependencies generated for this target.
 include CMakeFiles/Scheduling_Cars.dir/depend.make
@@ -73,32 +73,32 @@ CMakeFiles/Scheduling_Cars.dir/codegen:
 .PHONY : CMakeFiles/Scheduling_Cars.dir/codegen
 
 CMakeFiles/Scheduling_Cars.dir/main.c.o: CMakeFiles/Scheduling_Cars.dir/flags.make
-CMakeFiles/Scheduling_Cars.dir/main.c.o: /home/alexis/Documents/Tec/SO/Scheduling-Cars/main.c
+CMakeFiles/Scheduling_Cars.dir/main.c.o: /home/andres/Desktop/Operativos/Scheduling-Cars/main.c
 CMakeFiles/Scheduling_Cars.dir/main.c.o: CMakeFiles/Scheduling_Cars.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/alexis/Documents/Tec/SO/Scheduling-Cars/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/Scheduling_Cars.dir/main.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/Scheduling_Cars.dir/main.c.o -MF CMakeFiles/Scheduling_Cars.dir/main.c.o.d -o CMakeFiles/Scheduling_Cars.dir/main.c.o -c /home/alexis/Documents/Tec/SO/Scheduling-Cars/main.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/Scheduling_Cars.dir/main.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/Scheduling_Cars.dir/main.c.o -MF CMakeFiles/Scheduling_Cars.dir/main.c.o.d -o CMakeFiles/Scheduling_Cars.dir/main.c.o -c /home/andres/Desktop/Operativos/Scheduling-Cars/main.c
 
 CMakeFiles/Scheduling_Cars.dir/main.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/Scheduling_Cars.dir/main.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/alexis/Documents/Tec/SO/Scheduling-Cars/main.c > CMakeFiles/Scheduling_Cars.dir/main.c.i
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/andres/Desktop/Operativos/Scheduling-Cars/main.c > CMakeFiles/Scheduling_Cars.dir/main.c.i
 
 CMakeFiles/Scheduling_Cars.dir/main.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/Scheduling_Cars.dir/main.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/alexis/Documents/Tec/SO/Scheduling-Cars/main.c -o CMakeFiles/Scheduling_Cars.dir/main.c.s
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/andres/Desktop/Operativos/Scheduling-Cars/main.c -o CMakeFiles/Scheduling_Cars.dir/main.c.s
 
 CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o: CMakeFiles/Scheduling_Cars.dir/flags.make
-CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o: /home/alexis/Documents/Tec/SO/Scheduling-Cars/CEThreads.c
+CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o: /home/andres/Desktop/Operativos/Scheduling-Cars/CEThreads.c
 CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o: CMakeFiles/Scheduling_Cars.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/alexis/Documents/Tec/SO/Scheduling-Cars/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o -MF CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o.d -o CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o -c /home/alexis/Documents/Tec/SO/Scheduling-Cars/CEThreads.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o -MF CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o.d -o CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o -c /home/andres/Desktop/Operativos/Scheduling-Cars/CEThreads.c
 
 CMakeFiles/Scheduling_Cars.dir/CEThreads.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/Scheduling_Cars.dir/CEThreads.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/alexis/Documents/Tec/SO/Scheduling-Cars/CEThreads.c > CMakeFiles/Scheduling_Cars.dir/CEThreads.c.i
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/andres/Desktop/Operativos/Scheduling-Cars/CEThreads.c > CMakeFiles/Scheduling_Cars.dir/CEThreads.c.i
 
 CMakeFiles/Scheduling_Cars.dir/CEThreads.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/Scheduling_Cars.dir/CEThreads.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/alexis/Documents/Tec/SO/Scheduling-Cars/CEThreads.c -o CMakeFiles/Scheduling_Cars.dir/CEThreads.c.s
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/andres/Desktop/Operativos/Scheduling-Cars/CEThreads.c -o CMakeFiles/Scheduling_Cars.dir/CEThreads.c.s
 
 # Object files for target Scheduling_Cars
 Scheduling_Cars_OBJECTS = \
@@ -111,8 +111,9 @@ Scheduling_Cars_EXTERNAL_OBJECTS =
 Scheduling_Cars: CMakeFiles/Scheduling_Cars.dir/main.c.o
 Scheduling_Cars: CMakeFiles/Scheduling_Cars.dir/CEThreads.c.o
 Scheduling_Cars: CMakeFiles/Scheduling_Cars.dir/build.make
+Scheduling_Cars: CMakeFiles/Scheduling_Cars.dir/compiler_depend.ts
 Scheduling_Cars: CMakeFiles/Scheduling_Cars.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/alexis/Documents/Tec/SO/Scheduling-Cars/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking C executable Scheduling_Cars"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking C executable Scheduling_Cars"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/Scheduling_Cars.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -124,6 +125,6 @@ CMakeFiles/Scheduling_Cars.dir/clean:
 .PHONY : CMakeFiles/Scheduling_Cars.dir/clean
 
 CMakeFiles/Scheduling_Cars.dir/depend:
-	cd /home/alexis/Documents/Tec/SO/Scheduling-Cars/cmake-build-debug && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/alexis/Documents/Tec/SO/Scheduling-Cars /home/alexis/Documents/Tec/SO/Scheduling-Cars /home/alexis/Documents/Tec/SO/Scheduling-Cars/cmake-build-debug /home/alexis/Documents/Tec/SO/Scheduling-Cars/cmake-build-debug /home/alexis/Documents/Tec/SO/Scheduling-Cars/cmake-build-debug/CMakeFiles/Scheduling_Cars.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/andres/Desktop/Operativos/Scheduling-Cars /home/andres/Desktop/Operativos/Scheduling-Cars /home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug /home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug /home/andres/Desktop/Operativos/Scheduling-Cars/cmake-build-debug/CMakeFiles/Scheduling_Cars.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/Scheduling_Cars.dir/depend
 

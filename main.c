@@ -385,7 +385,7 @@ void requeue_car(CarQueue* queue, Car* car) {
 
 // Read scheduler configuration from file
 void read_scheduler_config() {
-    FILE* fp = fopen("/home/alexis/Documents/Tec/SO/Scheduling-Cars/scheduler.txt", "r");
+    FILE* fp = fopen("/home/andres/Desktop/Operativos/Scheduling-Cars/scheduler.txt", "r");
     if (!fp) {
         // Create a default scheduler config if file doesn't exist
         fp = fopen("scheduler.txt", "w");
@@ -400,7 +400,7 @@ void read_scheduler_config() {
         fprintf(fp, "default_estimated_time=5\n");
 
         fclose(fp);
-        fp = fopen("/home/alexis/Documents/Tec/SO/Scheduling-Cars/scheduler.txt", "r");
+        fp = fopen("/home/andres/Desktop/Operativos/Scheduling-Cars/scheduler.txt", "r");
         if (!fp) {
             perror("Failed to open scheduler.txt");
             return;
@@ -561,7 +561,7 @@ void enqueue_car(CarQueue* queue, Car* car) {
                     car->deadline = max_wait_emergency;
 
                     // Emergency vehicles always at front
-                    // But ordered by arrival time among themselves
+                    // Bu t ordered by arrival time among themselves
                     CarQueueNode *current = queue->head;
                     CarQueueNode *prev = NULL;
 
@@ -718,6 +718,115 @@ void playCarMotion(double travel_time_seconds, double total_travel_time) {
     }
 }
 
+void display_next_car_in_line() {
+    CEmutex_lock(&queue_mutex);
+
+    printf("Queued cars - Left: %d, Right: %d\n",
+           left_queue.size, right_queue.size);
+
+    // Display next car in left queue
+    if (left_queue.head != NULL) {
+        Car* next_left = left_queue.head->car;
+        printf("Next car from LEFT: ID %d, Type %s",
+               next_left->id, type_name(next_left->type));
+
+        // Show additional info based on scheduler
+        if (current_scheduler == PRIORITY) {
+            printf(", Priority %d", next_left->priority);
+        } else if (current_scheduler == SJF) {
+            printf(", Est. Time %d sec", next_left->estimated_time);
+        } else if (current_scheduler == REALTIME && next_left->type == EMERGENCY) {
+            printf(", Remaining time to deadline: %d sec",
+                   time_to_deadline(next_left->arrival_time));
+        }
+        printf("\n");
+    } else {
+        printf("No cars waiting from LEFT\n");
+    }
+
+    // Display next car in right queue
+    if (right_queue.head != NULL) {
+        Car* next_right = right_queue.head->car;
+        printf("Next car from RIGHT: ID %d, Type %s",
+               next_right->id, type_name(next_right->type));
+
+        // Show additional info based on scheduler
+        if (current_scheduler == PRIORITY) {
+            printf(", Priority %d", next_right->priority);
+        } else if (current_scheduler == SJF) {
+            printf(", Est. Time %d sec", next_right->estimated_time);
+        } else if (current_scheduler == REALTIME && next_right->type == EMERGENCY) {
+            printf(", Remaining time to deadline: %d sec",
+                   time_to_deadline(next_right->arrival_time));
+        }
+        printf("\n");
+    } else {
+        printf("No cars waiting from RIGHT\n");
+    }
+
+    // Display which car is likely to enter next based on flow method
+    printf("Current flow direction: %s\n", current_dir == LEFT ? "LEFT" : "RIGHT");
+
+    if (strcmp(flow_method, "FIFO") == 0) {
+        // In FIFO, next car depends on which car arrived first and road direction
+        if (left_queue.head != NULL && right_queue.head != NULL) {
+            Car* left_car = left_queue.head->car;
+            Car* right_car = right_queue.head->car;
+
+            if (cars_on_road == 0) {
+                // If road is empty, car with earliest arrival time goes first
+                if (left_car->arrival_time.tv_sec < right_car->arrival_time.tv_sec ||
+                    (left_car->arrival_time.tv_sec == right_car->arrival_time.tv_sec &&
+                     left_car->arrival_time.tv_nsec < right_car->arrival_time.tv_nsec)) {
+                    printf("Next to enter: LEFT car ID %d\n", left_car->id);
+                } else {
+                    printf("Next to enter: RIGHT car ID %d\n", right_car->id);
+                }
+            } else if (cars_on_road_left > 0 && cars_on_road_right == 0) {
+                printf("Next to enter: LEFT car ID %d (follows traffic direction)\n", left_car->id);
+            } else if (cars_on_road_right > 0 && cars_on_road_left == 0) {
+                printf("Next to enter: RIGHT car ID %d (follows traffic direction)\n", right_car->id);
+            } else {
+                printf("Road is currently occupied by cars from both directions\n");
+            }
+        } else if (left_queue.head != NULL) {
+            printf("Next to enter: LEFT car ID %d (no cars from right)\n", left_queue.head->car->id);
+        } else if (right_queue.head != NULL) {
+            printf("Next to enter: RIGHT car ID %d (no cars from left)\n", right_queue.head->car->id);
+        }
+    } else if (strcmp(flow_method, "EQUITY") == 0) {
+        printf("Cars in current window: %d/%d\n", cars_in_window, W);
+
+        if (current_dir == LEFT && left_queue.head != NULL) {
+            printf("Next to enter: LEFT car ID %d\n", left_queue.head->car->id);
+        } else if (current_dir == RIGHT && right_queue.head != NULL) {
+            printf("Next to enter: RIGHT car ID %d\n", right_queue.head->car->id);
+        } else if (current_dir == LEFT && left_queue.head == NULL && right_queue.head != NULL) {
+            printf("Next to enter: RIGHT car ID %d (no cars from left)\n", right_queue.head->car->id);
+        } else if (current_dir == RIGHT && right_queue.head == NULL && left_queue.head != NULL) {
+            printf("Next to enter: LEFT car ID %d (no cars from right)\n", left_queue.head->car->id);
+        }
+    } else if (strcmp(flow_method, "SIGNAL") == 0) {
+        if (current_dir == LEFT && left_queue.head != NULL) {
+            printf("Next to enter: LEFT car ID %d\n", left_queue.head->car->id);
+        } else if (current_dir == RIGHT && right_queue.head != NULL) {
+            printf("Next to enter: RIGHT car ID %d\n", right_queue.head->car->id);
+        } else {
+            printf("No cars waiting in current flow direction\n");
+        }
+    }
+
+    // Check for emergency vehicle priority override
+    if ((left_queue.head != NULL && left_queue.head->car->type == EMERGENCY &&
+         time_to_deadline(left_queue.head->car->arrival_time) <= 1) ||
+        (right_queue.head != NULL && right_queue.head->car->type == EMERGENCY &&
+         time_to_deadline(right_queue.head->car->arrival_time) <= 1)) {
+        printf("EMERGENCY VEHICLE OVERRIDE IMMINENT!\n");
+    }
+
+    CEmutex_unlock(&queue_mutex);
+}
+
 void* car_thread(void* arg) {
     Car* car = (Car*)arg;
     //printf("Here car %d\n", car->id);
@@ -763,7 +872,7 @@ void* car_thread(void* arg) {
         enqueue_car(&right_queue, car);
     }
     CEmutex_lock(&road_mutex);
-
+    display_next_car_in_line();
     // Special handling for Round Robin
     if (current_scheduler == RR && car->type != EMERGENCY) {
         // Use current time_slice_remaining for RR scheduling
@@ -1442,7 +1551,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Read config
-    FILE* fp = fopen("/home/alexis/Documents/Tec/SO/Scheduling-Cars/config.txt", "r");
+    FILE* fp = fopen("/home/andres/Desktop/Operativos/Scheduling-Cars/config.txt", "r");
     if (!fp) {
         printf("Failed to open config file\n");
     }
@@ -1485,7 +1594,6 @@ int main(int argc, char* argv[]) {
 
 
     printf("Remaining L: %d Reamining R: %d \n", remaining_left, remaining_right);
-
     cars_in_window  = 0;
     current_dir     = LEFT;
 
